@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { ArtStyle, PieceShape, PieceMaterial, MovementType, PuzzleState, UserPreferences, TopicType } from '../types';
-import { generateArtImage, generateYouTubeMetadata, YouTubeMetadata, getTrendingTopics, generateVisualPromptFromTopic, generateDocumentarySnippets } from '../services/geminiService';
+import { generateArtImage, generateYouTubeMetadata, YouTubeMetadata, getTrendingTopics, generateVisualPromptFromTopic, generateDocumentarySnippets, fetchFactNarrative } from '../services/geminiService';
 import { getJalaliDate } from '../utils/dateUtils';
 import { MusicTrack } from '../components/sidebar/MusicUploader';
 import { VIRAL_CATEGORIES } from '../components/sidebar/VisionInput';
@@ -10,7 +10,7 @@ export type PipelineStep = 'IDLE' | 'SCAN' | 'SYNTH' | 'METADATA' | 'THUMBNAIL' 
 
 interface QueueItem {
   duration: number;
-  source: 'BREAKING' | 'VIRAL';
+  source: 'BREAKING' | 'VIRAL' | 'NARRATIVE';
   pieceCount: number;
 }
 
@@ -30,7 +30,7 @@ export const useProductionPipeline = (
     isFullPackage: boolean;
     queue: QueueItem[];
     currentQueueIdx: number;
-    docSnippets: string[]; // ذخیره فکت‌ها
+    docSnippets: string[]; 
   }>({
     isGenerating: false,
     isSolving: false,
@@ -112,28 +112,31 @@ export const useProductionPipeline = (
     }));
     
     setLastVideoBlob(null);
+
+    // منطق ترتیبی موسیقی برای اتوپایلوت
     if (musicTracks.length > 0) {
-      const track = selectedTrackId 
-        ? (musicTracks.find(t => t.id === selectedTrackId) || musicTracks[0]) 
-        : musicTracks[Math.max(0, state.currentQueueIdx) % musicTracks.length];
+      const musicIdx = isManualOverride ? 0 : (state.currentQueueIdx % musicTracks.length);
+      const track = musicTracks[Math.max(0, musicIdx)];
       setActiveTrackName(track.name);
       if (audioRef.current) { audioRef.current.src = track.url; audioRef.current.load(); }
     }
+
     try {
       let visualPrompt = "";
       let activeTopicType = TopicType.MANUAL;
       let activeCategoryLabel = preferences.topicCategory;
       let sourceSubject = preferences.subject;
+
       if (!isManualOverride && state.isAutoMode) {
         if (item.source === 'VIRAL') {
           const randomNiche = VIRAL_CATEGORIES[Math.floor(Math.random() * VIRAL_CATEGORIES.length)];
           sourceSubject = randomNiche.topic;
           activeCategoryLabel = randomNiche.label;
           activeTopicType = TopicType.VIRAL;
-        } else if (item.source === 'BREAKING') {
-          sourceSubject = (await getTrendingTopics())[0] || "Global Innovation";
-          activeTopicType = TopicType.BREAKING;
-          activeCategoryLabel = "Breaking News";
+        } else if (item.source === 'NARRATIVE') {
+          sourceSubject = await fetchFactNarrative();
+          activeTopicType = TopicType.NARRATIVE;
+          activeCategoryLabel = "Historical Narrative";
         }
       } else { activeTopicType = preferences.topicType || TopicType.MANUAL; }
       
@@ -141,13 +144,18 @@ export const useProductionPipeline = (
       
       setState(s => ({ ...s, pipelineStep: 'SYNTH', imageUrl: isManualOverride ? s.imageUrl : null }));
       
+      // منطق تنوع (Randomization) برای اتوپایلوت
       const useRandom = !isManualOverride && state.isAutoMode;
-      const finalStyle = useRandom ? Object.values(ArtStyle)[Math.floor(Math.random() * Object.values(ArtStyle).length)] : preferences.style;
-      const finalMovement = useRandom ? Object.values(MovementType)[Math.floor(Math.random() * Object.values(MovementType).length)] : preferences.movement;
-      const finalMaterial = useRandom ? Object.values(PieceMaterial)[Math.floor(Math.random() * Object.values(PieceMaterial).length)] : preferences.material;
-      const finalShape = useRandom ? Object.values(PieceShape)[Math.floor(Math.random() * Object.values(PieceShape).length)] : preferences.shape;
+      const styles = Object.values(ArtStyle);
+      const movements = Object.values(MovementType);
+      const materials = Object.values(PieceMaterial);
+      const shapes = Object.values(PieceShape);
+
+      const finalStyle = useRandom ? styles[Math.floor(Math.random() * styles.length)] : preferences.style;
+      const finalMovement = useRandom ? movements[Math.floor(Math.random() * movements.length)] : preferences.movement;
+      const finalMaterial = useRandom ? materials[Math.floor(Math.random() * materials.length)] : preferences.material;
+      const finalShape = useRandom ? shapes[Math.floor(Math.random() * shapes.length)] : preferences.shape;
       
-      // اجرای همزمان سنتز تصویر و فکت‌ها برای صرفه‌جویی در زمان
       const [art, snippets] = await Promise.all([
         generateArtImage(finalStyle, visualPrompt),
         generateDocumentarySnippets(visualPrompt)

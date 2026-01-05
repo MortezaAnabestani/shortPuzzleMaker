@@ -99,17 +99,19 @@ const App: React.FC = () => {
       return;
     }
 
+    // صف ۵ مرحله‌ای جدید طبق درخواست کاربر
     const queue: any[] = [
-      { duration: 0.25, source: 'VIRAL', pieceCount: 400 },
-      { duration: 0.35, source: 'VIRAL', pieceCount: 600 },
-      { duration: 0.50, source: 'VIRAL', pieceCount: 800 },
-      { duration: 0.60, source: 'BREAKING', pieceCount: 1000 },
-      { duration: 0.75, source: 'VIRAL', pieceCount: 1200 }
+      { duration: 0.5, source: 'VIRAL', pieceCount: 100 },      // 30s Viral
+      { duration: 0.75, source: 'VIRAL', pieceCount: 300 },     // 45s Viral
+      { duration: 1.0, source: 'VIRAL', pieceCount: 500 },      // 60s Viral
+      { duration: 1.0, source: 'NARRATIVE', pieceCount: 500 },  // 60s Narrative
+      { duration: 1.0, source: 'NARRATIVE', pieceCount: 900 }   // 60s Narrative 900pcs
     ];
 
     setState(s => ({ 
       ...s, 
       isAutoMode: true, 
+      isFullPackage: true, // همیشه پکیج کامل برای اتوپایلوت فعال باشد
       queue: queue, 
       currentQueueIdx: 0,
       pipelineStep: 'IDLE' 

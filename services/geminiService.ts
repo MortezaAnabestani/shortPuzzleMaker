@@ -40,29 +40,48 @@ export const findSmartMusicByMood = async (musicMood: MusicMood, topic: string):
   const ai = getAIInstance();
 
   const moodGuidance = {
-    [MusicMood.MYSTERIOUS]: "Dark ambient, mysterious tones, subtle tension, slow tempo (50-70 BPM), minor key",
-    [MusicMood.EPIC]: "Orchestral, cinematic, epic crescendos, medium-fast tempo (90-120 BPM), heroic brass",
-    [MusicMood.CALM]: "Peaceful ambient, gentle piano, nature sounds, very slow tempo (40-60 BPM), major key",
-    [MusicMood.SUSPENSE]: "Tense strings, building tension, dramatic pauses, medium tempo (70-90 BPM), dissonant chords",
-    [MusicMood.INSPIRING]: "Uplifting, hopeful melody, warm strings, medium tempo (80-100 BPM), major key progression",
-    [MusicMood.DARK]: "Intense, ominous, heavy bass, slow brooding tempo (50-70 BPM), dark minor progressions"
+    [MusicMood.MYSTERIOUS]: "Gentle mysterious ambience with soft pads, light tension, relaxing tempo (60-80 BPM), soothing but intriguing, good for puzzle solving and focus",
+    [MusicMood.EPIC]: "Uplifting cinematic music, inspiring orchestral, positive energy, medium tempo (85-100 BPM), motivating but not overwhelming, suitable for achievements",
+    [MusicMood.CALM]: "Very peaceful and relaxing, gentle piano or ambient pads, soft nature sounds, slow comfortable tempo (50-70 BPM), meditation-like, perfect for concentration",
+    [MusicMood.SUSPENSE]: "Light suspenseful background, subtle tension without being heavy, flowing rhythm (70-85 BPM), creates curiosity not anxiety, engaging for puzzle discovery",
+    [MusicMood.INSPIRING]: "Warm uplifting melody, hopeful and positive, gentle progression, comfortable tempo (75-95 BPM), encourages focus and accomplishment, bright but relaxing",
+    [MusicMood.DARK]: "Deep atmospheric ambience, rich bass but not aggressive, slow hypnotic tempo (55-75 BPM), mysterious depth without heaviness, contemplative mood"
   };
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Find a 100% ROYALTY-FREE (YouTube Safe) direct MP3 download link for background music.
+      contents: `Find a 100% ROYALTY-FREE (YouTube Safe) direct MP3 download link for PUZZLE-SOLVING background music.
 
-      Topic Context: "${topic}"
-      Required Mood: ${musicMood}
-      Musical Style: ${moodGuidance[musicMood]}
+      CORE CONTEXT: This music is for a PUZZLE VIDEO where pieces come together calmly and satisfyingly.
+      The base mood should be RELAXING, FOCUSED, and PLEASANT regardless of topic.
 
-      STRICT REQUIREMENTS:
-      1. Must match the mood exactly: ${moodGuidance[musicMood]}
-      2. SOURCES: ONLY use direct links to .mp3 files from pixabay.com/music or incompetech.com
-      3. NO YouTube video links, NO streaming services
-      4. The mood must align with the narrative being told
-      5. Instrumental only (no vocals)
+      Topic Theme: "${topic}"
+      Mood Direction: ${musicMood}
+      Musical Style Guide: ${moodGuidance[musicMood]}
+
+      CRITICAL REQUIREMENTS:
+      1. PRIMARY: Music MUST be relaxing and suitable for puzzle-solving concentration
+      2. SECONDARY: Subtle hints of the mood/topic theme without being heavy or dramatic
+      3. Tempo: Medium-slow (50-100 BPM) - NEVER too fast or aggressive
+      4. Energy: Calm to moderate - NEVER intense, heavy, or overwhelming
+      5. Vibe: Background music that helps focus, not demands attention
+      6. SOURCES: ONLY direct .mp3 links from pixabay.com/music or incompetech.com
+      7. NO YouTube links, NO streaming services
+      8. Instrumental only (no vocals)
+      9. Length: At least 1-2 minutes
+
+      AVOID:
+      - Heavy, dark, or overly dramatic tracks
+      - Fast tempos or aggressive beats
+      - Loud, attention-demanding music
+      - Anything that would distract from puzzle solving
+
+      IDEAL EXAMPLES:
+      - Soft ambient with gentle movement
+      - Light piano with atmospheric pads
+      - Calm electronic with smooth progression
+      - Peaceful orchestral backgrounds
 
       Return JSON ONLY:
       { "title": "Track Title", "url": "https://...direct-link.mp3", "source": "Pixabay/Incompetech" }`,

@@ -10,6 +10,7 @@ import ThumbnailGenerator from './components/ThumbnailGenerator';
 import AudioStatus from './components/layout/AudioStatus';
 import RecordingSystem from './components/RecordingSystem';
 import { MusicTrack } from './components/sidebar/MusicUploader';
+import { playWithFade, pauseWithFade } from './utils/audioFade';
 
 const App: React.FC = () => {
   const [preferences, setPreferences] = useState<UserPreferences>({
@@ -53,22 +54,24 @@ const App: React.FC = () => {
     setActiveTrackName, handleAddCloudTrack, audioRef
   );
 
-  const handleToggleSolve = () => {
+  const handleToggleSolve = async () => {
     setState(s => {
       const nextSolving = !s.isSolving;
       if (audioRef.current) {
         if (nextSolving) {
           audioRef.current.currentTime = 0;
-          audioRef.current.play().catch(() => {});
+          // Fade in over 2 seconds
+          playWithFade(audioRef.current, { duration: 2000, targetVolume: 1.0 });
         } else {
-          audioRef.current.pause();
+          // Fade out over 1.5 seconds then pause
+          pauseWithFade(audioRef.current, { duration: 1500 });
         }
       }
-      return { 
-        ...s, 
-        isSolving: nextSolving, 
-        isRecording: nextSolving, 
-        pipelineStep: nextSolving ? 'RECORDING' : 'IDLE' 
+      return {
+        ...s,
+        isSolving: nextSolving,
+        isRecording: nextSolving,
+        pipelineStep: nextSolving ? 'RECORDING' : 'IDLE'
       };
     });
   };
@@ -77,9 +80,10 @@ const App: React.FC = () => {
     setState(prev => ({ ...prev, isFullPackage: !prev.isFullPackage }));
   }, [setState]);
 
-  const handlePuzzleFinished = () => {
+  const handlePuzzleFinished = async () => {
     if (audioRef.current) {
-      audioRef.current.pause();
+      // Fade out over 1.5 seconds when puzzle completes
+      await pauseWithFade(audioRef.current, { duration: 1500 });
       audioRef.current.currentTime = 0;
     }
     setState(s => ({ ...s, isSolving: false, isRecording: false, pipelineStep: 'PACKAGING' }));

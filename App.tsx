@@ -132,11 +132,11 @@ const App: React.FC = () => {
 
       <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#020205] relative z-10 flex flex-col">
         <section className="h-[85vh] w-full relative bg-black shrink-0">
-          <CanvasArea 
-              canvasHandleRef={canvasHandleRef} 
-              imageUrl={state.imageUrl} 
+          <CanvasArea
+              canvasHandleRef={canvasHandleRef}
+              imageUrl={state.imageUrl}
               durationMinutes={preferences.durationMinutes}
-              isColoring={state.isSolving} 
+              isColoring={state.isSolving}
               pieceCount={preferences.pieceCount}
               shape={preferences.shape}
               material={preferences.material}
@@ -145,10 +145,11 @@ const App: React.FC = () => {
               topicCategory={preferences.topicCategory}
               engagementGifUrl={engagementGifUrl}
               channelLogoUrl={channelLogoUrl}
-              onProgress={p => setState(prev => ({ ...prev, progress: p }))} 
-              onFinished={handlePuzzleFinished} 
+              onProgress={p => setState(prev => ({ ...prev, progress: p }))}
+              onFinished={handlePuzzleFinished}
               onToggleSolve={handleToggleSolve}
               docSnippets={state.docSnippets}
+              storyArc={state.storyArc}
               showDocumentaryTips={preferences.showDocumentaryTips}
               progress={state.progress}
           />

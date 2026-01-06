@@ -10,17 +10,21 @@ import { TopicType } from '../../types';
 
 export const VIRAL_CATEGORIES = [
   { id: 'ancient', label: 'Ancient Wonders', icon: <Landmark className="w-3.5 h-3.5" />, topic: 'Grand cinematic reconstructions of lost ancient wonders, pyramids, or temples with epic lighting and atmospheric historical accuracy.' },
-  { id: 'portrait', label: 'Artistic Portrait', icon: <Camera className="w-3.5 h-3.5" />, topic: 'Diverse and expressive human portraiture exploring deep emotions and unique facial character through varied professional lighting.' },
-  { id: 'celebrity', label: 'Celebrity Spotlight', icon: <Star className="w-3.5 h-3.5" />, topic: 'Iconic moments of global cultural influence, captured in high-glamour settings or legendary performances.' },
-  { id: 'anim', label: 'Famous Animation', icon: <Sparkles className="w-3.5 h-3.5" />, topic: 'Fantastical 3D digital worlds and high-detail character artistry from imaginary realms in dynamic encounters.' },
-  { id: 'fashion', label: 'High-Fashion', icon: <User className="w-3.5 h-3.5" />, topic: 'Avant-garde style and luxury aesthetics, showcasing cutting-edge fashion trends and professional editorial studio artistry.' },
-  { id: 'physique', label: 'Artistic Silhouette', icon: <User className="w-3.5 h-3.5" />, topic: 'The elegance of human form and athletic movement, captured as high-contrast artistic study through silhouettes.' },
-  { id: 'sensual', label: 'Sensual Moods', icon: <Flame className="w-3.5 h-3.5" />, topic: 'Mysterious and evocative aesthetic scenes focusing on warmth, atmosphere, and sophisticated mood through cinematic lighting.' },
-  { id: 'glamour', label: 'Luxury World', icon: <Sparkles className="w-3.5 h-3.5" />, topic: 'The peak of opulence, wealth, and grand aesthetics, featuring elite settings and high-value subjects.' },
+  { id: 'ocean', label: 'Ocean Mysteries', icon: <Waves className="w-3.5 h-3.5" />, topic: 'Deep sea creatures, coral reefs, mysterious marine phenomena, bioluminescent organisms, and unexplored ocean depths with dramatic underwater lighting.' },
+  { id: 'space', label: 'Space Exploration', icon: <Star className="w-3.5 h-3.5" />, topic: 'Nebulae, galaxies, black holes, exoplanets, space missions, astronomical phenomena with cinematic cosmic scale and scientific accuracy.' },
+  { id: 'nature', label: 'Nature Wonders', icon: <Sparkles className="w-3.5 h-3.5" />, topic: 'Breathtaking natural phenomena like auroras, volcanic eruptions, rare weather events, exotic wildlife in pristine habitats with documentary quality.' },
+  { id: 'science', label: 'Science Breakthroughs', icon: <Zap className="w-3.5 h-3.5" />, topic: 'Cutting-edge scientific discoveries, quantum physics, DNA structures, nanotechnology, artificial intelligence with educational visual representations.' },
+  { id: 'architecture', label: 'Architecture Marvels', icon: <Landmark className="w-3.5 h-3.5" />, topic: 'Modern architectural masterpieces, futuristic city designs, sustainable buildings, iconic structures with dramatic perspectives and golden hour lighting.' },
+  { id: 'wildlife', label: 'Wildlife Behavior', icon: <Heart className="w-3.5 h-3.5" />, topic: 'Rare animal behaviors, predator-prey dynamics, migration patterns, endangered species in their natural habitats with National Geographic quality.' },
+  { id: 'tech', label: 'Future Technology', icon: <Terminal className="w-3.5 h-3.5" />, topic: 'Revolutionary gadgets, robotics, quantum computers, neural interfaces, green energy innovations with sleek futuristic aesthetics.' },
+  { id: 'medical', label: 'Medical Marvels', icon: <Heart className="w-3.5 h-3.5" />, topic: 'Human anatomy, medical breakthroughs, surgical innovations, cellular biology, brain science with detailed anatomical accuracy and clinical precision.' },
+  { id: 'geology', label: 'Earth Secrets', icon: <Globe className="w-3.5 h-3.5" />, topic: 'Geological formations, crystal caves, mineral deposits, tectonic phenomena, rare gemstones with macro photography detail and natural color.' },
   { id: 'cyber', label: 'Cyberpunk Future', icon: <Zap className="w-3.5 h-3.5" />, topic: 'Vivid futuristic cityscapes and advanced technological worlds, exploring the high-tech neon aesthetic.' },
   { id: 'myth', label: 'Mythical Legends', icon: <Sparkles className="w-3.5 h-3.5" />, topic: 'Epic visual interpretations of ancient legends, cosmic deities, and celestial beings in grand environments.' },
-  { id: 'cars', label: 'Supercars Apex', icon: <Zap className="w-3.5 h-3.5" />, topic: 'The energy and aesthetic of advanced mechanical engineering and hypercars in diverse cinematic settings.' },
-  { id: 'dream', label: 'Surreal Dreams', icon: <Sparkles className="w-3.5 h-3.5" />, topic: 'Surreal visual explorations of the subconscious, featuring impossible architecture and vivid physics.' },
+  { id: 'history', label: 'Lost History', icon: <BookOpen className="w-3.5 h-3.5" />, topic: 'Forgotten civilizations, archaeological discoveries, historical mysteries, ancient artifacts with historically accurate reconstruction.' },
+  { id: 'portrait', label: 'Human Stories', icon: <Camera className="w-3.5 h-3.5" />, topic: 'Diverse cultural portraits, emotional expressions, human connection, traditional costumes with documentary storytelling depth.' },
+  { id: 'climate', label: 'Climate Phenomena', icon: <Waves className="w-3.5 h-3.5" />, topic: 'Climate change effects, melting glaciers, extreme weather, ecosystem transformations with scientific documentation and environmental awareness.' },
+  { id: 'micro', label: 'Microscopic World', icon: <Sparkles className="w-3.5 h-3.5" />, topic: 'Cellular structures, bacteria, viruses, microorganisms, crystalline patterns with extreme macro photography and scientific detail.' },
 ];
 
 interface VisionInputProps {

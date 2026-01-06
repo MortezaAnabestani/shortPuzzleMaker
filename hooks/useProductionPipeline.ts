@@ -1,7 +1,18 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { ArtStyle, PieceShape, PieceMaterial, MovementType, PuzzleState, UserPreferences, TopicType } from '../types';
-import { generateArtImage, generateYouTubeMetadata, YouTubeMetadata, getTrendingTopics, generateVisualPromptFromTopic, generateDocumentarySnippets, fetchFactNarrative, findSmartMusic } from '../services/geminiService';
+import { ArtStyle, PieceShape, PieceMaterial, MovementType, PuzzleState, UserPreferences, TopicType, StoryArc } from '../types';
+import {
+  generateArtImage,
+  generateYouTubeMetadata,
+  YouTubeMetadata,
+  getTrendingTopics,
+  generateVisualPromptFromTopic,
+  generateDocumentarySnippets,
+  fetchFactNarrative,
+  findSmartMusic,
+  generateCoherentContentPackage,
+  findSmartMusicByMood
+} from '../services/geminiService';
 import { getJalaliDate } from '../utils/dateUtils';
 import { MusicTrack } from '../components/sidebar/MusicUploader';
 import { VIRAL_CATEGORIES } from '../components/sidebar/VisionInput';
@@ -25,14 +36,15 @@ export const useProductionPipeline = (
   onAddCloudTrack: (url: string, title: string) => void,
   audioRef: React.RefObject<HTMLAudioElement | null>
 ) => {
-  const [state, setState] = useState<PuzzleState & { 
+  const [state, setState] = useState<PuzzleState & {
     audioError: boolean;
     isAutoMode: boolean;
     pipelineStep: PipelineStep;
     isFullPackage: boolean;
     queue: QueueItem[];
     currentQueueIdx: number;
-    docSnippets: string[]; 
+    docSnippets: string[];
+    storyArc: StoryArc | null;
   }>({
     isGenerating: false,
     isSolving: false,
@@ -46,7 +58,8 @@ export const useProductionPipeline = (
     isFullPackage: false,
     queue: [],
     currentQueueIdx: -1,
-    docSnippets: []
+    docSnippets: [],
+    storyArc: null
   });
 
   const [metadata, setMetadata] = useState<YouTubeMetadata | null>(null);
@@ -129,8 +142,8 @@ export const useProductionPipeline = (
   }, [state.pipelineStep, lastVideoBlob, executePackaging]);
 
   const processPipelineItem = useCallback(async (item: QueueItem, isManualOverride: boolean = false) => {
-    setState(s => ({ ...s, pipelineStep: 'SCAN', isGenerating: true, error: null, imageUrl: isManualOverride ? s.imageUrl : null, progress: 0 }));
-    
+    setState(s => ({ ...s, pipelineStep: 'SCAN', isGenerating: true, error: null, imageUrl: isManualOverride ? s.imageUrl : null, progress: 0, storyArc: null }));
+
     setLastVideoBlob(null);
     setMetadata(null);
     setThumbnailDataUrl(null);
@@ -138,58 +151,138 @@ export const useProductionPipeline = (
     try {
       let sourceSubject = preferences.subject;
       let activeTopicType = TopicType.MANUAL;
+      let categoryLabel = "Custom";
 
       if (!isManualOverride && state.isAutoMode) {
         if (item.source === 'VIRAL') {
           const randomNiche = VIRAL_CATEGORIES[Math.floor(Math.random() * VIRAL_CATEGORIES.length)];
-          sourceSubject = randomNiche.topic;
+
+          console.log(`🎯 Using NEW Coherent Content Package System for: ${randomNiche.label}`);
+          const contentPackage = await generateCoherentContentPackage(randomNiche.topic, randomNiche.label);
+
+          sourceSubject = contentPackage.visualPrompt;
           activeTopicType = TopicType.VIRAL;
+          categoryLabel = contentPackage.theme.category;
+
+          setState(s => ({ ...s, pipelineStep: 'MUSIC' }));
+          const trackData = await findSmartMusicByMood(contentPackage.theme.musicMood, sourceSubject);
+          if (trackData && trackData.url) {
+            const blobUrl = await fetchAudioBlob(trackData.url);
+            if (blobUrl) {
+              onAddCloudTrack(blobUrl, trackData.title);
+              setActiveTrackName(trackData.title);
+            }
+          }
+
+          setState(s => ({ ...s, pipelineStep: 'SYNTH' }));
+          const finalStyle = Object.values(ArtStyle)[Math.floor(Math.random() * 8)];
+          const art = await generateArtImage(finalStyle, contentPackage.visualPrompt);
+
+          setPreferences(p => ({
+            ...p,
+            subject: sourceSubject,
+            style: finalStyle,
+            topicType: activeTopicType,
+            topicCategory: categoryLabel,
+            narrativeLens: contentPackage.theme.narrativeLens
+          }));
+
+          setState(s => ({
+            ...s,
+            imageUrl: art.imageUrl,
+            storyArc: contentPackage.storyArc,
+            docSnippets: [],
+            isGenerating: false,
+            pipelineStep: 'METADATA'
+          }));
+
+          setIsMetadataLoading(true);
+          setMetadata(contentPackage.metadata);
+          setIsMetadataLoading(false);
+
+          setState(s => ({ ...s, pipelineStep: 'THUMBNAIL' }));
+
+          if (state.isAutoMode) {
+            setTimeout(() => setState(s => ({ ...s, isSolving: true, isRecording: true, pipelineStep: 'RECORDING' })), 3000);
+          } else {
+            setState(s => ({ ...s, pipelineStep: 'IDLE' }));
+          }
+
         } else if (item.source === 'NARRATIVE') {
           sourceSubject = await fetchFactNarrative();
           activeTopicType = TopicType.NARRATIVE;
-        }
-      }
 
-      const visualPrompt = await generateVisualPromptFromTopic(sourceSubject);
-      
-      // مرحله جدید: جستجوی موسیقی آرام‌بخش اختصاصی
-      setState(s => ({ ...s, pipelineStep: 'MUSIC' }));
-      const trackData = await findSmartMusic(visualPrompt);
-      if (trackData && trackData.url) {
-        const blobUrl = await fetchAudioBlob(trackData.url);
-        if (blobUrl) {
-          onAddCloudTrack(blobUrl, trackData.title);
-          setActiveTrackName(trackData.title);
-        }
-      }
+          const visualPrompt = await generateVisualPromptFromTopic(sourceSubject, NarrativeLens.ORIGIN_STORY);
 
-      setState(s => ({ ...s, pipelineStep: 'SYNTH' }));
-      const useRandom = !isManualOverride && state.isAutoMode;
-      const finalStyle = useRandom ? Object.values(ArtStyle)[Math.floor(Math.random() * 8)] : preferences.style;
-      const [art, snippets] = await Promise.all([
-        generateArtImage(finalStyle, visualPrompt),
-        generateDocumentarySnippets(visualPrompt)
-      ]);
-      
-      setPreferences(p => ({ ...p, subject: visualPrompt, style: finalStyle, topicType: activeTopicType }));
-      setState(s => ({ ...s, imageUrl: art.imageUrl, docSnippets: snippets, isGenerating: false, pipelineStep: 'METADATA' }));
-      
-      setIsMetadataLoading(true);
-      const meta = await generateYouTubeMetadata(visualPrompt, finalStyle);
-      setMetadata(meta);
-      setIsMetadataLoading(false);
-      
-      setState(s => ({ ...s, pipelineStep: 'THUMBNAIL' }));
-      
-      if (state.isAutoMode) {
-        setTimeout(() => setState(s => ({ ...s, isSolving: true, isRecording: true, pipelineStep: 'RECORDING' })), 3000);
+          setState(s => ({ ...s, pipelineStep: 'MUSIC' }));
+          const trackData = await findSmartMusic(visualPrompt);
+          if (trackData && trackData.url) {
+            const blobUrl = await fetchAudioBlob(trackData.url);
+            if (blobUrl) {
+              onAddCloudTrack(blobUrl, trackData.title);
+              setActiveTrackName(trackData.title);
+            }
+          }
+
+          setState(s => ({ ...s, pipelineStep: 'SYNTH' }));
+          const finalStyle = Object.values(ArtStyle)[Math.floor(Math.random() * 8)];
+          const [art, snippets] = await Promise.all([
+            generateArtImage(finalStyle, visualPrompt),
+            generateDocumentarySnippets(visualPrompt)
+          ]);
+
+          setPreferences(p => ({ ...p, subject: visualPrompt, style: finalStyle, topicType: activeTopicType }));
+          setState(s => ({ ...s, imageUrl: art.imageUrl, docSnippets: snippets, isGenerating: false, pipelineStep: 'METADATA' }));
+
+          setIsMetadataLoading(true);
+          const meta = await generateYouTubeMetadata(visualPrompt, finalStyle);
+          setMetadata(meta);
+          setIsMetadataLoading(false);
+
+          setState(s => ({ ...s, pipelineStep: 'THUMBNAIL' }));
+
+          if (state.isAutoMode) {
+            setTimeout(() => setState(s => ({ ...s, isSolving: true, isRecording: true, pipelineStep: 'RECORDING' })), 3000);
+          } else {
+            setState(s => ({ ...s, pipelineStep: 'IDLE' }));
+          }
+        }
       } else {
+        const visualPrompt = await generateVisualPromptFromTopic(sourceSubject);
+
+        setState(s => ({ ...s, pipelineStep: 'MUSIC' }));
+        const trackData = await findSmartMusic(visualPrompt);
+        if (trackData && trackData.url) {
+          const blobUrl = await fetchAudioBlob(trackData.url);
+          if (blobUrl) {
+            onAddCloudTrack(blobUrl, trackData.title);
+            setActiveTrackName(trackData.title);
+          }
+        }
+
+        setState(s => ({ ...s, pipelineStep: 'SYNTH' }));
+        const finalStyle = preferences.style;
+        const [art, snippets] = await Promise.all([
+          generateArtImage(finalStyle, visualPrompt),
+          generateDocumentarySnippets(visualPrompt)
+        ]);
+
+        setPreferences(p => ({ ...p, subject: visualPrompt }));
+        setState(s => ({ ...s, imageUrl: art.imageUrl, docSnippets: snippets, isGenerating: false, pipelineStep: 'METADATA' }));
+
+        setIsMetadataLoading(true);
+        const meta = await generateYouTubeMetadata(visualPrompt, finalStyle);
+        setMetadata(meta);
+        setIsMetadataLoading(false);
+
+        setState(s => ({ ...s, pipelineStep: 'THUMBNAIL' }));
         setState(s => ({ ...s, pipelineStep: 'IDLE' }));
       }
     } catch (e) {
+      console.error("Pipeline error:", e);
       setState(s => ({ ...s, isAutoMode: false, isGenerating: false, pipelineStep: 'IDLE', error: "Neural Engine Sync Error" }));
     }
-  }, [preferences, state.isAutoMode, onAddCloudTrack, setActiveTrackName, setPreferences]);
+  }, [preferences, state.isAutoMode, onAddCloudTrack, setActiveTrackName, setPreferences, fetchAudioBlob]);
 
   const toggleAutoMode = useCallback(() => {
     setState(s => {

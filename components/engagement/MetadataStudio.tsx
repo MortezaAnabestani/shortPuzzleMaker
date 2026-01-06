@@ -142,7 +142,7 @@ const MetadataStudio: React.FC<MetadataStudioProps> = ({ metadata, isLoading, on
             </div>
 
             {/* Tags Block */}
-            <div className="p-5 border-b border-zinc-800 flex-1">
+            <div className="p-5 border-b border-zinc-800">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Hash className="w-3.5 h-3.5 text-[#007acc]" />
@@ -154,15 +154,40 @@ const MetadataStudio: React.FC<MetadataStudioProps> = ({ metadata, isLoading, on
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {metadata.tags.map(tag => (
-                  <span 
-                    key={tag} 
+                  <span
+                    key={tag}
                     className="px-2 py-1 bg-zinc-900 border border-zinc-800 rounded text-[10px] font-mono text-zinc-400 hover:border-[#007acc]/50 hover:text-[#007acc] cursor-pointer transition-colors select-all"
                   >
-                    #{tag}
+                    {tag}
                   </span>
                 ))}
               </div>
             </div>
+
+            {/* Hashtags Block */}
+            {metadata.hashtags && metadata.hashtags.length > 0 && (
+              <div className="p-5 border-b border-zinc-800 flex-1">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Hash className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-[11px] font-bold text-zinc-400 font-mono uppercase">HASHTAGS_SHORTS</span>
+                  </div>
+                  <span className="text-[10px] bg-emerald-900/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono">
+                    {metadata.hashtags.length}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {metadata.hashtags.map(tag => (
+                    <span
+                      key={tag}
+                      className="px-2 py-1 bg-emerald-900/10 border border-emerald-500/20 rounded text-[10px] font-mono text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-900/20 cursor-pointer transition-colors select-all"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Action Footer */}
             <div className="p-5 bg-zinc-950 mt-auto">

@@ -1,11 +1,12 @@
 
 import { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
-import { PieceShape, PieceMaterial, MovementType, PuzzleBackground } from '../types';
+import { PieceShape, PieceMaterial, MovementType, PuzzleBackground, StoryArc } from '../types';
 import { usePuzzleLogic } from '../hooks/usePuzzleLogic';
 import { renderPuzzleFrame } from '../utils/puzzleRenderer';
 import { FINALE_PAUSE, WAVE_DURATION } from '../utils/finaleManager';
 import { sonicEngine } from '../services/proceduralAudio';
 import PuzzleOverlay from './puzzle/PuzzleOverlay';
+import DocumentaryOverlay from './puzzle/DocumentaryOverlay';
 
 interface PuzzleCanvasProps {
   imageUrl: string;
@@ -23,6 +24,7 @@ interface PuzzleCanvasProps {
   onFinished: () => void;
   onToggleSolve: () => void;
   docSnippets?: string[];
+  storyArc?: StoryArc | null;
   showDocumentaryTips?: boolean;
 }
 
@@ -30,13 +32,14 @@ export interface CanvasHandle {
   getCanvas: () => HTMLCanvasElement | null;
 }
 
-const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(({ 
+const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(({
   imageUrl, durationMinutes, pieceCount, shape, material, movement, background, topicCategory, engagementGifUrl, channelLogoUrl, onProgress, isSolving, onFinished, onToggleSolve,
-  docSnippets = [], showDocumentaryTips = false
+  docSnippets = [], storyArc = null, showDocumentaryTips = false
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isReady, setIsReady] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
+  const [progress, setProgress] = useState(0);
   
   const vWidth = 1080;
   const vHeight = 2280;
@@ -196,6 +199,7 @@ const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(({
       });
       
       const progressPercent = (Math.min(elapsedSinceStart, totalDuration) / totalDuration) * 100;
+      setProgress(progressPercent);
       onProgress(progressPercent);
       animationRef.current = requestAnimationFrame(loop);
     }
@@ -216,6 +220,13 @@ const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(({
   return (
     <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
       <PuzzleOverlay isLoading={!isReady && !!imageUrl} error={null} isShorts={true} topicCategory={topicCategory} buildProgress={buildProgress} />
+      <DocumentaryOverlay
+        progress={progress}
+        snippets={docSnippets}
+        storyArc={storyArc || undefined}
+        isEnabled={showDocumentaryTips}
+        isSolving={isSolving}
+      />
       <canvas ref={canvasRef} width={vWidth} height={vHeight} className="block w-full h-full object-contain bg-black" />
     </div>
   );

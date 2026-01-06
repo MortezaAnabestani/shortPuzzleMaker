@@ -53,6 +53,41 @@ export enum StorySource {
   DIRECT_PROMPT = 'DIRECT_PROMPT'
 }
 
+export enum NarrativeLens {
+  HIDDEN_DISCOVERY = 'Hidden Discovery',
+  WHY_MYSTERY = 'Why Mystery',
+  COMPARISON = 'Comparison Reveal',
+  UNSOLVED_ENIGMA = 'Unsolved Enigma',
+  TRANSFORMATION = 'Before/After Transformation',
+  COUNTDOWN = 'Top N Countdown',
+  ORIGIN_STORY = 'Origin Story'
+}
+
+export enum MusicMood {
+  MYSTERIOUS = 'Mysterious Ambient',
+  EPIC = 'Epic Cinematic',
+  CALM = 'Calm Atmospheric',
+  SUSPENSE = 'Suspenseful Tension',
+  INSPIRING = 'Inspiring Uplifting',
+  DARK = 'Dark Intense'
+}
+
+export interface StoryArc {
+  hook: string;
+  buildup: string[];
+  climax: string;
+  reveal: string;
+}
+
+export interface ContentTheme {
+  category: string;
+  topic: string;
+  visualElements: string[];
+  keyFacts: string[];
+  narrativeLens: NarrativeLens;
+  musicMood: MusicMood;
+}
+
 export interface PuzzleState {
   isGenerating: boolean;
   isSolving: boolean;
@@ -74,4 +109,5 @@ export interface UserPreferences {
   topicType?: TopicType;
   topicCategory?: string;
   showDocumentaryTips?: boolean;
+  narrativeLens?: NarrativeLens;
 }

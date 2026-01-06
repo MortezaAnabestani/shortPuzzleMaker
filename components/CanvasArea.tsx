@@ -1,14 +1,14 @@
 
 import React, { useRef } from 'react';
 import PuzzleCanvas, { CanvasHandle } from './PuzzleCanvas';
-import { PieceShape, PieceMaterial, MovementType, PuzzleBackground } from '../types';
+import { PieceShape, PieceMaterial, MovementType, PuzzleBackground, StoryArc } from '../types';
 import { Maximize2, Smartphone, Monitor } from 'lucide-react';
 
 interface CanvasAreaProps {
   canvasHandleRef: React.RefObject<CanvasHandle | null>;
   imageUrl: string | null;
   durationMinutes: number;
-  isColoring: boolean; 
+  isColoring: boolean;
   pieceCount: number;
   shape: PieceShape;
   material: PieceMaterial;
@@ -21,13 +21,14 @@ interface CanvasAreaProps {
   onFinished: () => void;
   onToggleSolve: () => void;
   docSnippets?: string[];
+  storyArc?: StoryArc | null;
   showDocumentaryTips?: boolean;
   progress: number;
 }
 
 const CanvasArea: React.FC<CanvasAreaProps> = ({
   canvasHandleRef, imageUrl, durationMinutes, isColoring, pieceCount, shape, material, movement, background, topicCategory, engagementGifUrl, channelLogoUrl, onProgress, onFinished, onToggleSolve,
-  docSnippets = [], showDocumentaryTips = false, progress
+  docSnippets = [], storyArc = null, showDocumentaryTips = false, progress
 }) => {
   const phoneFrameRef = useRef<HTMLDivElement>(null);
 
@@ -78,10 +79,10 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
 
           <div className="w-full h-full rounded-[3.1rem] overflow-hidden bg-black relative border border-white/5 shadow-inner">
             {imageUrl ? (
-              <PuzzleCanvas 
+              <PuzzleCanvas
                 ref={canvasHandleRef}
-                imageUrl={imageUrl} 
-                durationMinutes={durationMinutes} 
+                imageUrl={imageUrl}
+                durationMinutes={durationMinutes}
                 pieceCount={pieceCount}
                 shape={shape}
                 material={material}
@@ -95,6 +96,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
                 onFinished={onFinished}
                 onToggleSolve={onToggleSolve}
                 docSnippets={docSnippets}
+                storyArc={storyArc}
                 showDocumentaryTips={showDocumentaryTips}
               />
             ) : (

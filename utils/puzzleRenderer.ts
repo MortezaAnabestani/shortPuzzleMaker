@@ -4,6 +4,7 @@ import { PieceShape, MovementType, PuzzleBackground } from '../types';
 import { getFinaleState, getDiagonalWaveY } from './finaleManager';
 import { envEngine } from './environmentRenderer';
 import { renderOutroCard } from './outroRenderer';
+import { updateTrailHistory, renderTrailEffect, clearTrailForPiece } from './trailEffects';
 
 export interface RenderOptions {
   ctx: CanvasRenderingContext2D;
@@ -132,6 +133,9 @@ export const renderPuzzleFrame = ({
 
   // --- 2. PIECES ---
   for (const p of completedPieces) {
+    // Clear trail when piece is completed
+    clearTrailForPiece(p.id);
+
     const waveY = getDiagonalWaveY(p, elapsedAfterFinish, vWidth, vHeight);
     const drawX = p.tx - (p.cachedCanvas!.width - p.pw) / 2;
     const drawY = p.ty - (p.cachedCanvas!.height - p.ph) / 2 + waveY;
@@ -150,6 +154,17 @@ export const renderPuzzleFrame = ({
     }
     const tRaw = (p as any).tRaw;
     const pos = calculateKineticTransform(p, tRaw, movement, vWidth, vHeight);
+
+    // Optimized trail rendering - only during peak movement
+    if (tRaw >= 0.1 && tRaw <= 0.85) {
+      // Update trail history for this piece
+      updateTrailHistory(p, pos.x, pos.y, pos.rot, pos.scale, elapsed, movement, tRaw);
+
+      // Render trail effect first (behind the piece)
+      renderTrailEffect(ctx, p, movement);
+    }
+
+    // Render the main piece
     ctx.save();
     ctx.translate(pos.x, pos.y);
     ctx.rotate(pos.rot);

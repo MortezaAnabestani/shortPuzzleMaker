@@ -1,30 +1,175 @@
-
-import React, { useState } from 'react';
-import { 
-  Radio, Zap, ChevronRight, X, Loader2, LayoutGrid, Sparkles, 
-  Heart, Flame, User, Star, Camera, BookOpen, Waves, Terminal, 
-  ArrowRight, Hash, Globe, Landmark
-} from 'lucide-react';
-import { getTrendingTopics, generateVisualPromptFromTopic, fetchFactNarrative } from '../../services/geminiService';
-import { TopicType } from '../../types';
+import React, { useState } from "react";
+import {
+  Radio,
+  Zap,
+  ChevronRight,
+  X,
+  Loader2,
+  LayoutGrid,
+  Sparkles,
+  Heart,
+  Flame,
+  User,
+  Star,
+  Camera,
+  BookOpen,
+  Waves,
+  Terminal,
+  ArrowRight,
+  Hash,
+  Globe,
+  Landmark,
+  Shirt,
+  Users,
+} from "lucide-react";
+import {
+  getTrendingTopics,
+  generateVisualPromptFromTopic,
+  fetchFactNarrative,
+} from "../../services/geminiService";
+import { TopicType } from "../../types";
 
 export const VIRAL_CATEGORIES = [
-  { id: 'ancient', label: 'Ancient Wonders', icon: <Landmark className="w-3.5 h-3.5" />, topic: 'Grand cinematic reconstructions of lost ancient wonders, pyramids, or temples with epic lighting and atmospheric historical accuracy.' },
-  { id: 'ocean', label: 'Ocean Mysteries', icon: <Waves className="w-3.5 h-3.5" />, topic: 'Deep sea creatures, coral reefs, mysterious marine phenomena, bioluminescent organisms, and unexplored ocean depths with dramatic underwater lighting.' },
-  { id: 'space', label: 'Space Exploration', icon: <Star className="w-3.5 h-3.5" />, topic: 'Nebulae, galaxies, black holes, exoplanets, space missions, astronomical phenomena with cinematic cosmic scale and scientific accuracy.' },
-  { id: 'nature', label: 'Nature Wonders', icon: <Sparkles className="w-3.5 h-3.5" />, topic: 'Breathtaking natural phenomena like auroras, volcanic eruptions, rare weather events, exotic wildlife in pristine habitats with documentary quality.' },
-  { id: 'science', label: 'Science Breakthroughs', icon: <Zap className="w-3.5 h-3.5" />, topic: 'Cutting-edge scientific discoveries, quantum physics, DNA structures, nanotechnology, artificial intelligence with educational visual representations.' },
-  { id: 'architecture', label: 'Architecture Marvels', icon: <Landmark className="w-3.5 h-3.5" />, topic: 'Modern architectural masterpieces, futuristic city designs, sustainable buildings, iconic structures with dramatic perspectives and golden hour lighting.' },
-  { id: 'wildlife', label: 'Wildlife Behavior', icon: <Heart className="w-3.5 h-3.5" />, topic: 'Rare animal behaviors, predator-prey dynamics, migration patterns, endangered species in their natural habitats with National Geographic quality.' },
-  { id: 'tech', label: 'Future Technology', icon: <Terminal className="w-3.5 h-3.5" />, topic: 'Revolutionary gadgets, robotics, quantum computers, neural interfaces, green energy innovations with sleek futuristic aesthetics.' },
-  { id: 'medical', label: 'Medical Marvels', icon: <Heart className="w-3.5 h-3.5" />, topic: 'Human anatomy, medical breakthroughs, surgical innovations, cellular biology, brain science with detailed anatomical accuracy and clinical precision.' },
-  { id: 'geology', label: 'Earth Secrets', icon: <Globe className="w-3.5 h-3.5" />, topic: 'Geological formations, crystal caves, mineral deposits, tectonic phenomena, rare gemstones with macro photography detail and natural color.' },
-  { id: 'cyber', label: 'Cyberpunk Future', icon: <Zap className="w-3.5 h-3.5" />, topic: 'Vivid futuristic cityscapes and advanced technological worlds, exploring the high-tech neon aesthetic.' },
-  { id: 'myth', label: 'Mythical Legends', icon: <Sparkles className="w-3.5 h-3.5" />, topic: 'Epic visual interpretations of ancient legends, cosmic deities, and celestial beings in grand environments.' },
-  { id: 'history', label: 'Lost History', icon: <BookOpen className="w-3.5 h-3.5" />, topic: 'Forgotten civilizations, archaeological discoveries, historical mysteries, ancient artifacts with historically accurate reconstruction.' },
-  { id: 'portrait', label: 'Human Stories', icon: <Camera className="w-3.5 h-3.5" />, topic: 'Diverse cultural portraits, emotional expressions, human connection, traditional costumes with documentary storytelling depth.' },
-  { id: 'climate', label: 'Climate Phenomena', icon: <Waves className="w-3.5 h-3.5" />, topic: 'Climate change effects, melting glaciers, extreme weather, ecosystem transformations with scientific documentation and environmental awareness.' },
-  { id: 'micro', label: 'Microscopic World', icon: <Sparkles className="w-3.5 h-3.5" />, topic: 'Cellular structures, bacteria, viruses, microorganisms, crystalline patterns with extreme macro photography and scientific detail.' },
+  {
+    id: "ancient",
+    label: "Ancient Wonders",
+    icon: <Landmark className="w-3.5 h-3.5" />,
+    topic:
+      "Grand cinematic reconstructions of lost ancient wonders, pyramids, or temples with epic lighting and atmospheric historical accuracy.",
+  },
+  {
+    id: "ocean",
+    label: "Ocean Mysteries",
+    icon: <Waves className="w-3.5 h-3.5" />,
+    topic:
+      "Deep sea creatures, coral reefs, mysterious marine phenomena, bioluminescent organisms, and unexplored ocean depths with dramatic underwater lighting.",
+  },
+  {
+    id: "space",
+    label: "Space Exploration",
+    icon: <Star className="w-3.5 h-3.5" />,
+    topic:
+      "Nebulae, galaxies, black holes, exoplanets, space missions, astronomical phenomena with cinematic cosmic scale and scientific accuracy.",
+  },
+  {
+    id: "nature",
+    label: "Nature Wonders",
+    icon: <Sparkles className="w-3.5 h-3.5" />,
+    topic:
+      "Breathtaking natural phenomena like auroras, volcanic eruptions, rare weather events, exotic wildlife in pristine habitats with documentary quality.",
+  },
+  {
+    id: "science",
+    label: "Science Breakthroughs",
+    icon: <Zap className="w-3.5 h-3.5" />,
+    topic:
+      "Cutting-edge scientific discoveries, quantum physics, DNA structures, nanotechnology, artificial intelligence with educational visual representations.",
+  },
+  {
+    id: "architecture",
+    label: "Architecture Marvels",
+    icon: <Landmark className="w-3.5 h-3.5" />,
+    topic:
+      "Modern architectural masterpieces, futuristic city designs, sustainable buildings, iconic structures with dramatic perspectives and golden hour lighting.",
+  },
+  {
+    id: "wildlife",
+    label: "Wildlife Behavior",
+    icon: <Heart className="w-3.5 h-3.5" />,
+    topic:
+      "Rare animal behaviors, predator-prey dynamics, migration patterns, endangered species in their natural habitats with National Geographic quality.",
+  },
+  {
+    id: "tech",
+    label: "Future Technology",
+    icon: <Terminal className="w-3.5 h-3.5" />,
+    topic:
+      "Revolutionary gadgets, robotics, quantum computers, neural interfaces, green energy innovations with sleek futuristic aesthetics.",
+  },
+  {
+    id: "medical",
+    label: "Medical Marvels",
+    icon: <Heart className="w-3.5 h-3.5" />,
+    topic:
+      "Human anatomy, medical breakthroughs, surgical innovations, cellular biology, brain science with detailed anatomical accuracy and clinical precision.",
+  },
+  {
+    id: "geology",
+    label: "Earth Secrets",
+    icon: <Globe className="w-3.5 h-3.5" />,
+    topic:
+      "Geological formations, crystal caves, mineral deposits, tectonic phenomena, rare gemstones with macro photography detail and natural color.",
+  },
+  {
+    id: "cyber",
+    label: "Cyberpunk Future",
+    icon: <Zap className="w-3.5 h-3.5" />,
+    topic:
+      "Vivid futuristic cityscapes and advanced technological worlds, exploring the high-tech neon aesthetic.",
+  },
+  {
+    id: "myth",
+    label: "Mythical Legends",
+    icon: <Sparkles className="w-3.5 h-3.5" />,
+    topic:
+      "Epic visual interpretations of ancient legends, cosmic deities, and celestial beings in grand environments.",
+  },
+  {
+    id: "history",
+    label: "Lost History",
+    icon: <BookOpen className="w-3.5 h-3.5" />,
+    topic:
+      "Forgotten civilizations, archaeological discoveries, historical mysteries, ancient artifacts with historically accurate reconstruction.",
+  },
+  {
+    id: "portrait",
+    label: "Human Stories",
+    icon: <Camera className="w-3.5 h-3.5" />,
+    topic:
+      "Diverse cultural portraits, emotional expressions, human connection, traditional costumes with documentary storytelling depth.",
+  },
+  {
+    id: "climate",
+    label: "Climate Phenomena",
+    icon: <Waves className="w-3.5 h-3.5" />,
+    topic:
+      "Climate change effects, melting glaciers, extreme weather, ecosystem transformations with scientific documentation and environmental awareness.",
+  },
+  {
+    id: "micro",
+    label: "Microscopic World",
+    icon: <Sparkles className="w-3.5 h-3.5" />,
+    topic:
+      "Cellular structures, bacteria, viruses, microorganisms, crystalline patterns with extreme macro photography and scientific detail.",
+  },
+  {
+    id: "celebrity",
+    label: "Celebrity Moments",
+    icon: <Star className="w-3.5 h-3.5" />,
+    topic:
+      "Iconic celebrity moments, red carpet glamour, legendary performers, cultural icons with dramatic lighting and magazine-quality cinematography.",
+  },
+  {
+    id: "fashion",
+    label: "Fashion & Style",
+    icon: <Shirt className="w-3.5 h-3.5" />,
+    topic:
+      "High fashion runway shows, couture designs, style evolution, iconic fashion moments with elegant composition and luxurious aesthetics.",
+  },
+  {
+    id: "beauty",
+    label: "Beauty & Elegance",
+    icon: <Sparkles className="w-3.5 h-3.5" />,
+    topic:
+      "Stunning beauty portraits, elegant poses, graceful expressions, artistic makeup and styling with soft lighting and refined aesthetics.",
+  },
+  {
+    id: "allure",
+    label: "Feminine Allure",
+    icon: <Heart className="w-3.5 h-3.5" />,
+    topic:
+      "Captivating feminine beauty, sexy body, elegant silhouettes, sensual poses, artistic portraits with sophisticated lighting and cinematic appeal.",
+  },
 ];
 
 interface VisionInputProps {
@@ -60,7 +205,7 @@ const VisionInput: React.FC<VisionInputProps> = ({ value, onChange, disabled }) 
     try {
       const narrative = await fetchFactNarrative();
       const visualPrompt = await generateVisualPromptFromTopic(narrative);
-      onChange(visualPrompt, TopicType.NARRATIVE, 'Historical Discovery');
+      onChange(visualPrompt, TopicType.NARRATIVE, "Historical Discovery");
     } catch (e) {
       console.error(e);
     } finally {
@@ -68,7 +213,11 @@ const VisionInput: React.FC<VisionInputProps> = ({ value, onChange, disabled }) 
     }
   };
 
-  const handleSelectTopic = async (topic: string, isFromViralCategories: boolean = false, categoryLabel?: string) => {
+  const handleSelectTopic = async (
+    topic: string,
+    isFromViralCategories: boolean = false,
+    categoryLabel?: string
+  ) => {
     setIsGeneratingScene(true);
     setTopics([]);
     setShowCategories(false);
@@ -96,13 +245,15 @@ const VisionInput: React.FC<VisionInputProps> = ({ value, onChange, disabled }) 
             <span className="text-[10px] font-black uppercase tracking-widest">Signal Terminal</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className={`w-1 h-1 rounded-full ${isSearching ? 'bg-blue-500 animate-pulse' : 'bg-zinc-800'}`} />
+            <div
+              className={`w-1 h-1 rounded-full ${isSearching ? "bg-blue-500 animate-pulse" : "bg-zinc-800"}`}
+            />
             <span className="text-[8px] font-mono text-zinc-600 uppercase">Uplink Status</span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-1 p-2 overflow-x-auto no-scrollbar">
-          <button 
+          <button
             onClick={handleFetchNarrative}
             disabled={disabled || isSearching || isGeneratingScene}
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold bg-emerald-600/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-600/20 transition-all whitespace-nowrap"
@@ -111,7 +262,7 @@ const VisionInput: React.FC<VisionInputProps> = ({ value, onChange, disabled }) 
             <span>NARRATIVE</span>
           </button>
 
-          <button 
+          <button
             onClick={handleFetchTrends}
             disabled={disabled || isSearching || isGeneratingScene}
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold bg-red-600/10 border border-red-500/20 text-red-400 hover:bg-red-600/20 transition-all whitespace-nowrap"
@@ -120,14 +271,16 @@ const VisionInput: React.FC<VisionInputProps> = ({ value, onChange, disabled }) 
             <span>BREAKING</span>
           </button>
 
-          <button 
+          <button
             onClick={() => setShowCategories(!showCategories)}
             disabled={disabled || isSearching || isGeneratingScene}
             className={`
               flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold transition-all border whitespace-nowrap
-              ${showCategories 
-                ? 'bg-blue-600 border-blue-400 text-white shadow-lg' 
-                : 'bg-zinc-800 border-white/5 text-zinc-400 hover:bg-zinc-700'}
+              ${
+                showCategories
+                  ? "bg-blue-600 border-blue-400 text-white shadow-lg"
+                  : "bg-zinc-800 border-white/5 text-zinc-400 hover:bg-zinc-700"
+              }
             `}
           >
             <LayoutGrid className="w-3 h-3" />
@@ -144,7 +297,7 @@ const VisionInput: React.FC<VisionInputProps> = ({ value, onChange, disabled }) 
           className={`
             w-full h-44 bg-transparent p-5 text-[14px] font-mono leading-relaxed text-zinc-200 
             placeholder:text-zinc-700 resize-none outline-none custom-scrollbar
-            ${isGeneratingScene ? 'opacity-20 blur-[1px]' : ''}
+            ${isGeneratingScene ? "opacity-20 blur-[1px]" : ""}
           `}
           placeholder="// INPUT NARRATIVE SEED OR SELECT SIGNAL SOURCE..."
           disabled={disabled || isSearching || isGeneratingScene}
@@ -158,7 +311,10 @@ const VisionInput: React.FC<VisionInputProps> = ({ value, onChange, disabled }) 
               <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest flex items-center gap-2">
                 <Hash className="w-3.5 h-3.5" /> SELECT VIRAL NICHE
               </span>
-              <button onClick={() => setShowCategories(false)} className="text-zinc-500 hover:text-white transition-colors">
+              <button
+                onClick={() => setShowCategories(false)}
+                className="text-zinc-500 hover:text-white transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -196,7 +352,10 @@ const VisionInput: React.FC<VisionInputProps> = ({ value, onChange, disabled }) 
               <span className="text-[10px] font-black text-red-500 uppercase tracking-widest flex items-center gap-2">
                 <Radio className="w-3.5 h-3.5" /> LIVE GLOBAL SIGNALS
               </span>
-              <button onClick={() => setTopics([])} className="text-zinc-500 hover:text-white transition-colors">
+              <button
+                onClick={() => setTopics([])}
+                className="text-zinc-500 hover:text-white transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -229,6 +388,6 @@ const VisionInput: React.FC<VisionInputProps> = ({ value, onChange, disabled }) 
       </div>
     </div>
   );
-}
+};
 
 export default VisionInput;

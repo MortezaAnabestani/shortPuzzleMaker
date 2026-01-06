@@ -1,23 +1,78 @@
-// Adding React import to resolve namespace errors
+
 import React, { useEffect, useRef } from 'react';
 import { YouTubeMetadata } from '../services/geminiService';
 import { sonicEngine } from '../services/proceduralAudio';
 
 interface RecordingSystemProps {
   isRecording: boolean;
-  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  getCanvas: () => HTMLCanvasElement | null;
   audioRef: React.RefObject<HTMLAudioElement | null>;
   metadata: YouTubeMetadata | null;
   durationMinutes: number;
   onRecordingComplete: (blob: Blob) => void;
 }
 
-const RecordingSystem: React.FC<RecordingSystemProps> = ({ isRecording, canvasRef, audioRef, metadata, durationMinutes, onRecordingComplete }) => {
+const RecordingSystem: React.FC<RecordingSystemProps> = ({ isRecording, getCanvas, audioRef, metadata, durationMinutes, onRecordingComplete }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const gainNodeRef = useRef<GainNode | null>(null);
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const streamDestRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const musicGainRef = useRef<GainNode | null>(null);
   const currentMimeType = useRef<string>('');
+
+  const initAudioGraph = () => {
+    const audioEl = audioRef.current;
+    if (!audioEl) return null;
+
+    const ctx = sonicEngine.getContext();
+    if (!ctx) return null;
+
+    try {
+      // ایجاد سورس صوتی (فقط یکبار برای هر المنت در طول چرخه حیات)
+      if (!sourceNodeRef.current) {
+        sourceNodeRef.current = ctx.createMediaElementSource(audioEl);
+      }
+
+      // ایجاد مقصد استریم برای ضبط
+      if (!streamDestRef.current) {
+        streamDestRef.current = ctx.createMediaStreamDestination();
+      }
+
+      // ایجاد کنترلر ولوم (Gain)
+      if (!musicGainRef.current) {
+        musicGainRef.current = ctx.createGain();
+      }
+
+      const musicSource = sourceNodeRef.current;
+      const musicGain = musicGainRef.current;
+      const dest = streamDestRef.current;
+
+      // قطع اتصالات قبلی به صورت ایمن (جلوگیری از خطای Not Connected)
+      try {
+        musicSource.disconnect();
+      } catch (e) {
+        // اگر متصل نباشد، نادیده می‌گیریم
+      }
+      
+      // برقراری اتصالات گراف صوتی
+      musicSource.connect(musicGain);
+      musicGain.connect(ctx.destination); // برای شنیدن صدا از اسپیکر
+      musicGain.connect(dest); // برای ارسال به ریکوردر
+
+      // اتصال افکت‌های صوتی سیستم (SFX) به ضبط
+      const sfxGain = sonicEngine.getMasterGain();
+      if (sfxGain) {
+        try { sfxGain.disconnect(dest); } catch(e) {}
+        sfxGain.connect(dest);
+      }
+
+      return dest.stream;
+    } catch (e) {
+      console.error("Critical Audio Graph Error:", e);
+      // در صورت بروز خطا، حداقل استریم مقصد را برمی‌گردانیم تا ریکورد کلا متوقف نشود
+      return streamDestRef.current?.stream || null;
+    }
+  };
 
   useEffect(() => {
     if (isRecording) {
@@ -28,58 +83,50 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({ isRecording, canvasRe
   }, [isRecording]);
 
   const startRecording = async () => {
-    const canvas = canvasRef.current;
+    const canvas = getCanvas();
     const audioEl = audioRef.current;
     if (!canvas || !audioEl) return;
 
     try {
       const ctx = sonicEngine.getContext();
-      if (!ctx) return;
-      
-      if (ctx.state === 'suspended') {
+      if (ctx && ctx.state === 'suspended') {
         await ctx.resume();
       }
 
-      if (!sourceNodeRef.current) {
-        sourceNodeRef.current = ctx.createMediaElementSource(audioEl);
+      const audioStream = initAudioGraph();
+      if (!audioStream) {
+        throw new Error("Could not initialize audio stream");
       }
-      const musicSource = sourceNodeRef.current;
-      
-      const musicGain = ctx.createGain();
-      const dest = ctx.createMediaStreamDestination();
-      
-      musicSource.disconnect();
-      musicSource.connect(musicGain);
-      musicGain.connect(ctx.destination);
-      musicGain.connect(dest);
-      
-      const sfxGain = sonicEngine.getMasterGain();
-      if (sfxGain) {
-        sfxGain.connect(dest);
-      }
-      
-      gainNodeRef.current = musicGain;
 
-      const now = ctx.currentTime;
-      musicGain.gain.setValueAtTime(0, now);
-      // کاهش ولوم موسیقی در ضبط نهایی به ۶۰٪ برای غلبه افکت‌های صوتی
-      musicGain.gain.linearRampToValueAtTime(0.6, now + 2.0); 
+      // شروع ملایم صدا
+      if (musicGainRef.current) {
+        musicGainRef.current.gain.setValueAtTime(0, ctx.currentTime);
+        musicGainRef.current.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 1.0);
+      }
+
+      // اطمینان از پخش موسیقی
+      if (audioEl.src) {
+        audioEl.play().catch(e => console.warn("Recording Playback Blocked:", e));
+      }
 
       const videoStream = (canvas as any).captureStream(60);
-      const audioTrack = dest.stream.getAudioTracks()[0];
+      const audioTracks = audioStream.getAudioTracks();
       
-      const combinedStream = new MediaStream([...videoStream.getVideoTracks(), audioTrack]);
+      // ترکیب ترک‌های ویدئو و صدا
+      const tracks = [...videoStream.getVideoTracks()];
+      if (audioTracks.length > 0) tracks.push(audioTracks[0]);
+      
+      const combinedStream = new MediaStream(tracks);
 
       const mimeType = ['video/mp4;codecs=avc1', 'video/webm;codecs=vp9', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t)) || 'video/webm';
       currentMimeType.current = mimeType;
       
       const recorder = new MediaRecorder(combinedStream, {
         mimeType,
-        videoBitsPerSecond: 35000000 
+        videoBitsPerSecond: 25000000 
       });
 
       chunksRef.current = []; 
-
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
@@ -87,32 +134,30 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({ isRecording, canvasRe
       recorder.onstop = () => {
         const finalBlob = new Blob(chunksRef.current, { type: currentMimeType.current });
         onRecordingComplete(finalBlob);
-        
-        if (sfxGain) {
-          try { sfxGain.disconnect(dest); } catch(e) {}
-        }
       };
 
       recorder.start(1000);
       mediaRecorderRef.current = recorder;
     } catch (e) {
-      console.error("Recording system failure:", e);
+      console.error("Recording Engine Failure:", e);
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       const ctx = sonicEngine.getContext();
-      if (gainNodeRef.current && ctx) {
-        const now = ctx.currentTime;
-        gainNodeRef.current.gain.linearRampToValueAtTime(0, now + 1.5); 
+      
+      // فید-اوت سریع صدا در انتهای ویدئو
+      if (musicGainRef.current && ctx) {
+        musicGainRef.current.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
       }
       
+      // توقف ریکوردر بعد از نیم ثانیه فید-اوت
       setTimeout(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
           mediaRecorderRef.current.stop();
         }
-      }, 1600);
+      }, 500);
     }
   };
 

@@ -12,6 +12,7 @@ import ProductionConsole from './sidebar/ProductionConsole';
 import GifUploader from './sidebar/GifUploader';
 import SnapSoundUploader from './sidebar/SnapSoundUploader';
 import ChannelLogoUploader from './sidebar/ChannelLogoUploader';
+import SmartMusicFinder from './sidebar/SmartMusicFinder';
 
 interface SidebarProps {
   preferences: UserPreferences;
@@ -160,6 +161,14 @@ const Sidebar: React.FC<SidebarProps> = ({
             
             <div className="space-y-4 p-4 bg-zinc-900/10 rounded-2xl border border-white/5">
                 <ChannelLogoUploader onLogoSelect={onChannelLogoChange} disabled={isSolving || isAutoMode} />
+                
+                {/* Neural Sonic Finder - قابلیت جدید */}
+                <SmartMusicFinder 
+                  currentSubject={preferences.subject} 
+                  onSelectTrack={onAddCloudTrack}
+                  disabled={isSolving || isAutoMode}
+                />
+
                 <MusicUploader 
                     tracks={musicTracks}
                     selectedTrackId={selectedTrackId}

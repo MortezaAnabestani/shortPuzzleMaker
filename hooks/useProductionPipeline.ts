@@ -1,12 +1,14 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ArtStyle, PieceShape, PieceMaterial, MovementType, PuzzleState, UserPreferences, TopicType } from '../types';
-import { generateArtImage, generateYouTubeMetadata, YouTubeMetadata, getTrendingTopics, generateVisualPromptFromTopic, generateDocumentarySnippets, fetchFactNarrative } from '../services/geminiService';
+import { generateArtImage, generateYouTubeMetadata, YouTubeMetadata, getTrendingTopics, generateVisualPromptFromTopic, generateDocumentarySnippets, fetchFactNarrative, findSmartMusic } from '../services/geminiService';
 import { getJalaliDate } from '../utils/dateUtils';
 import { MusicTrack } from '../components/sidebar/MusicUploader';
 import { VIRAL_CATEGORIES } from '../components/sidebar/VisionInput';
 
-export type PipelineStep = 'IDLE' | 'SCAN' | 'SYNTH' | 'METADATA' | 'THUMBNAIL' | 'ANIMATE' | 'RECORDING' | 'PACKAGING';
+export type PipelineStep = 'IDLE' | 'SCAN' | 'MUSIC' | 'SYNTH' | 'METADATA' | 'THUMBNAIL' | 'ANIMATE' | 'RECORDING' | 'PACKAGING';
+
+const CLOUDFLARE_WORKER_URL = 'https://plain-tooth-75c3.jujube-bros.workers.dev/';
 
 interface QueueItem {
   duration: number;
@@ -20,7 +22,7 @@ export const useProductionPipeline = (
   musicTracks: MusicTrack[],
   selectedTrackId: string | null,
   setActiveTrackName: (name: string | null) => void,
-  directoryHandle: any, 
+  onAddCloudTrack: (url: string, title: string) => void,
   audioRef: React.RefObject<HTMLAudioElement | null>
 ) => {
   const [state, setState] = useState<PuzzleState & { 
@@ -51,148 +53,167 @@ export const useProductionPipeline = (
   const [isMetadataLoading, setIsMetadataLoading] = useState(false);
   const [thumbnailDataUrl, setThumbnailDataUrl] = useState<string | null>(null);
   const [lastVideoBlob, setLastVideoBlob] = useState<Blob | null>(null);
+  const isExportingRef = useRef(false);
+
+  const downloadFile = (name: string, blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  };
+
+  const fetchAudioBlob = async (url: string): Promise<string | null> => {
+    const proxies = [
+      { url: `${CLOUDFLARE_WORKER_URL}?url=${encodeURIComponent(url)}` },
+      { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}` }
+    ];
+    for (const p of proxies) {
+      try {
+        const res = await fetch(p.url);
+        if (res.ok) {
+          const blob = await res.blob();
+          return URL.createObjectURL(blob);
+        }
+      } catch (e) { console.warn("Proxy fail:", p.url); }
+    }
+    return null;
+  };
 
   const executePackaging = useCallback(async (videoBlob: Blob) => {
-    if (state.pipelineStep !== 'PACKAGING') return;
+    if (isExportingRef.current) return;
+    isExportingRef.current = true;
+
     const jalali = getJalaliDate();
-    const cleanTitle = metadata?.title.replace(/[\\/:*?"<>|]/g, '') || 'Video';
+    const cleanTitle = (metadata?.title || 'Studio_Project').replace(/[\\/:*?"<>|]/g, '').slice(0, 50);
     const baseFileName = `${jalali}_${cleanTitle}`;
+
     try {
-      const downloadFile = (name: string, blob: Blob) => {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-      };
+      downloadFile(`${baseFileName}_Video.${videoBlob.type.includes('mp4') ? 'mp4' : 'webm'}`, videoBlob);
       if (metadata) {
-        const content = `TITLE: ${metadata.title}\n\nDESCRIPTION:\n${metadata.description}\n\nTAGS: ${metadata.tags.join(', ')}`;
-        downloadFile(`${baseFileName}_Metadata.txt`, new Blob([content], { type: 'text/plain' }));
+        await new Promise(r => setTimeout(r, 1500));
+        downloadFile(`${baseFileName}_Metadata.txt`, new Blob([`TITLE: ${metadata.title}\n\nDESC: ${metadata.description}`], { type: 'text/plain' }));
       }
       if (thumbnailDataUrl) {
+        await new Promise(r => setTimeout(r, 1500));
         const res = await fetch(thumbnailDataUrl);
         downloadFile(`${baseFileName}_Thumbnail.jpg`, await res.blob());
       }
-      const ext = videoBlob.type.includes('mp4') ? 'mp4' : 'webm';
-      downloadFile(`${baseFileName}_Video.${ext}`, videoBlob);
-    } catch (err) { console.error("Packaging Failed:", err); }
-    setLastVideoBlob(null);
-    setTimeout(() => {
-      setState(prev => {
-        const nextIdx = prev.currentQueueIdx + 1;
-        const hasNext = prev.isFullPackage && nextIdx < prev.queue.length;
-        return { 
-          ...prev, 
-          currentQueueIdx: hasNext ? nextIdx : -1, 
-          pipelineStep: 'IDLE', 
-          isAutoMode: hasNext, 
-          isFullPackage: hasNext ? prev.isFullPackage : false,
-          isSolving: false, isRecording: false, imageUrl: null, progress: 0, queue: hasNext ? prev.queue : []
-        };
-      });
-    }, 2000);
-  }, [state.pipelineStep, metadata, thumbnailDataUrl]);
+    } finally {
+      setLastVideoBlob(null);
+      isExportingRef.current = false;
+      setTimeout(() => {
+        setState(prev => {
+          const nextIdx = prev.currentQueueIdx + 1;
+          const hasNext = prev.isFullPackage && nextIdx < prev.queue.length;
+          return { 
+            ...prev, 
+            currentQueueIdx: hasNext ? nextIdx : -1, 
+            pipelineStep: 'IDLE', 
+            isAutoMode: hasNext, 
+            isFullPackage: hasNext,
+            isSolving: false, isRecording: false, progress: 0, imageUrl: hasNext ? prev.imageUrl : null
+          };
+        });
+      }, 2500);
+    }
+  }, [metadata, thumbnailDataUrl]);
 
   useEffect(() => {
-    if (state.pipelineStep === 'PACKAGING' && lastVideoBlob) executePackaging(lastVideoBlob);
+    if (state.pipelineStep === 'PACKAGING' && lastVideoBlob && !isExportingRef.current) {
+      executePackaging(lastVideoBlob);
+    }
   }, [state.pipelineStep, lastVideoBlob, executePackaging]);
 
   const processPipelineItem = useCallback(async (item: QueueItem, isManualOverride: boolean = false) => {
-    setState(s => ({ 
-      ...s, 
-      pipelineStep: 'SCAN', 
-      isGenerating: true, 
-      error: null, 
-      imageUrl: isManualOverride ? s.imageUrl : null, 
-      progress: 0, 
-      isSolving: false, 
-      isRecording: false 
-    }));
+    setState(s => ({ ...s, pipelineStep: 'SCAN', isGenerating: true, error: null, imageUrl: isManualOverride ? s.imageUrl : null, progress: 0 }));
     
     setLastVideoBlob(null);
-
-    // منطق ترتیبی موسیقی برای اتوپایلوت
-    if (musicTracks.length > 0) {
-      const musicIdx = isManualOverride ? 0 : (state.currentQueueIdx % musicTracks.length);
-      const track = musicTracks[Math.max(0, musicIdx)];
-      setActiveTrackName(track.name);
-      if (audioRef.current) { audioRef.current.src = track.url; audioRef.current.load(); }
-    }
+    setMetadata(null);
+    setThumbnailDataUrl(null);
 
     try {
-      let visualPrompt = "";
-      let activeTopicType = TopicType.MANUAL;
-      let activeCategoryLabel = preferences.topicCategory;
       let sourceSubject = preferences.subject;
+      let activeTopicType = TopicType.MANUAL;
 
       if (!isManualOverride && state.isAutoMode) {
         if (item.source === 'VIRAL') {
           const randomNiche = VIRAL_CATEGORIES[Math.floor(Math.random() * VIRAL_CATEGORIES.length)];
           sourceSubject = randomNiche.topic;
-          activeCategoryLabel = randomNiche.label;
           activeTopicType = TopicType.VIRAL;
         } else if (item.source === 'NARRATIVE') {
           sourceSubject = await fetchFactNarrative();
           activeTopicType = TopicType.NARRATIVE;
-          activeCategoryLabel = "Historical Narrative";
         }
-      } else { activeTopicType = preferences.topicType || TopicType.MANUAL; }
-      
-      visualPrompt = await generateVisualPromptFromTopic(sourceSubject);
-      
-      setState(s => ({ ...s, pipelineStep: 'SYNTH', imageUrl: isManualOverride ? s.imageUrl : null }));
-      
-      // منطق تنوع (Randomization) برای اتوپایلوت
-      const useRandom = !isManualOverride && state.isAutoMode;
-      const styles = Object.values(ArtStyle);
-      const movements = Object.values(MovementType);
-      const materials = Object.values(PieceMaterial);
-      const shapes = Object.values(PieceShape);
+      }
 
-      const finalStyle = useRandom ? styles[Math.floor(Math.random() * styles.length)] : preferences.style;
-      const finalMovement = useRandom ? movements[Math.floor(Math.random() * movements.length)] : preferences.movement;
-      const finalMaterial = useRandom ? materials[Math.floor(Math.random() * materials.length)] : preferences.material;
-      const finalShape = useRandom ? shapes[Math.floor(Math.random() * shapes.length)] : preferences.shape;
+      const visualPrompt = await generateVisualPromptFromTopic(sourceSubject);
       
+      // مرحله جدید: جستجوی موسیقی آرام‌بخش اختصاصی
+      setState(s => ({ ...s, pipelineStep: 'MUSIC' }));
+      const trackData = await findSmartMusic(visualPrompt);
+      if (trackData && trackData.url) {
+        const blobUrl = await fetchAudioBlob(trackData.url);
+        if (blobUrl) {
+          onAddCloudTrack(blobUrl, trackData.title);
+          setActiveTrackName(trackData.title);
+        }
+      }
+
+      setState(s => ({ ...s, pipelineStep: 'SYNTH' }));
+      const useRandom = !isManualOverride && state.isAutoMode;
+      const finalStyle = useRandom ? Object.values(ArtStyle)[Math.floor(Math.random() * 8)] : preferences.style;
       const [art, snippets] = await Promise.all([
         generateArtImage(finalStyle, visualPrompt),
         generateDocumentarySnippets(visualPrompt)
       ]);
       
-      setPreferences(p => ({ 
-        ...p, subject: visualPrompt, durationMinutes: item.duration, pieceCount: item.pieceCount, 
-        style: finalStyle, movement: finalMovement, material: finalMaterial, shape: finalShape,
-        topicType: activeTopicType, topicCategory: activeCategoryLabel
-      }));
-      
+      setPreferences(p => ({ ...p, subject: visualPrompt, style: finalStyle, topicType: activeTopicType }));
       setState(s => ({ ...s, imageUrl: art.imageUrl, docSnippets: snippets, isGenerating: false, pipelineStep: 'METADATA' }));
+      
       setIsMetadataLoading(true);
-      setMetadata(await generateYouTubeMetadata(visualPrompt, finalStyle));
+      const meta = await generateYouTubeMetadata(visualPrompt, finalStyle);
+      setMetadata(meta);
       setIsMetadataLoading(false);
+      
       setState(s => ({ ...s, pipelineStep: 'THUMBNAIL' }));
       
       if (state.isAutoMode) {
-        setTimeout(() => {
-          setState(s => ({ ...s, pipelineStep: 'ANIMATE' }));
-          setTimeout(() => setState(s => ({ ...s, isSolving: true, isRecording: true, pipelineStep: 'RECORDING' })), 1500);
-        }, 3000);
-      } else { 
-        setState(s => ({ ...s, pipelineStep: 'IDLE' })); 
+        setTimeout(() => setState(s => ({ ...s, isSolving: true, isRecording: true, pipelineStep: 'RECORDING' })), 3000);
+      } else {
+        setState(s => ({ ...s, pipelineStep: 'IDLE' }));
       }
     } catch (e) {
-      console.error("Pipeline Item Error:", e);
-      setState(s => ({ ...s, isAutoMode: false, isGenerating: false, pipelineStep: 'IDLE', error: "Neural Engine Failure" }));
+      setState(s => ({ ...s, isAutoMode: false, isGenerating: false, pipelineStep: 'IDLE', error: "Neural Engine Sync Error" }));
     }
-  }, [preferences.subject, preferences.style, preferences.shape, preferences.material, preferences.movement, preferences.topicCategory, preferences.topicType, musicTracks, selectedTrackId, state.currentQueueIdx, state.isAutoMode, audioRef, setPreferences, setActiveTrackName]);
+  }, [preferences, state.isAutoMode, onAddCloudTrack, setActiveTrackName, setPreferences]);
+
+  const toggleAutoMode = useCallback(() => {
+    setState(s => {
+      const active = !s.isAutoMode;
+      return { 
+        ...s, 
+        isAutoMode: active, 
+        isFullPackage: active,
+        pipelineStep: active ? 'IDLE' : s.pipelineStep,
+        queue: active ? [
+          { duration: 0.5, source: 'VIRAL', pieceCount: 200 },
+          { duration: 1.0, source: 'NARRATIVE', pieceCount: 500 },
+          { duration: 1.0, source: 'VIRAL', pieceCount: 500 }
+        ] : s.queue,
+        currentQueueIdx: active ? 0 : s.currentQueueIdx
+      };
+    });
+  }, []);
 
   useEffect(() => {
-    if (state.isAutoMode && state.pipelineStep === 'IDLE' && state.currentQueueIdx >= 0) {
-      const item = state.queue[state.currentQueueIdx];
-      if (item) processPipelineItem(item, false); 
+    if (state.isAutoMode && state.pipelineStep === 'IDLE' && state.currentQueueIdx !== -1) {
+      processPipelineItem(state.queue[state.currentQueueIdx], false);
     }
-  }, [state.isAutoMode, state.pipelineStep, state.currentQueueIdx, state.queue, processPipelineItem]);
+  }, [state.isAutoMode, state.pipelineStep, state.currentQueueIdx, processPipelineItem]);
 
-  return { state, setState, metadata, isMetadataLoading, thumbnailDataUrl, setThumbnailDataUrl, setLastVideoBlob, processPipelineItem };
+  return { state, setState, metadata, isMetadataLoading, thumbnailDataUrl, setThumbnailDataUrl, setLastVideoBlob, processPipelineItem, toggleAutoMode };
 };

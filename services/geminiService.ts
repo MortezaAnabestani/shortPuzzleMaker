@@ -13,111 +13,64 @@ export interface YouTubeMetadata {
   ctr_strategy: string; 
 }
 
+export interface SmartMusicTrack {
+  title: string;
+  url: string;
+  source: string;
+}
+
 export const SONIC_LIBRARY = [
-  { id: 'sc-1', title: 'Neon Pulse (Cyberpunk)', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', genre: 'Cyberpunk' },
-  { id: 'sc-2', title: 'Cinematic Dawn', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', genre: 'Cinematic' },
-  { id: 'sc-3', title: 'Lofi Chill Vibes', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', genre: 'Lofi' },
-  { id: 'sc-4', title: 'Future Echoes', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', genre: 'Electronic' },
+  { id: 'sc-1', title: 'Deep Ambient Mystery', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', genre: 'Documentary' },
+  { id: 'sc-2', title: 'Cinematic History', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', genre: 'Cinematic' },
+  { id: 'sc-3', title: 'Techno Discovery', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3', genre: 'Electronic' },
+  { id: 'sc-4', title: 'Ancient Echoes', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', genre: 'Ambient' },
 ];
 
 const getAIInstance = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-export const getTrendingTopics = async (): Promise<string[]> => {
+export const findSmartMusic = async (topic: string): Promise<SmartMusicTrack | null> => {
   const ai = getAIInstance();
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: "Identify the top 5 most viral historical documentary events or archeological discoveries trending today. Return as JSON list of headlines.",
+      contents: `Find a 100% ROYALTY-FREE (YouTube Safe) direct MP3 download link for a track suitable for a documentary about: "${topic}".
+      
+      STRICT RHYTHM & STYLE RULES:
+      1. RHYTHM: Slow to Medium tempo (60-90 BPM). No fast or aggressive beats.
+      2. ATMOSPHERE: Ambient, Relaxing, or Mysterious. It must create a calm background for puzzle solving.
+      3. SOURCES: ONLY use direct links to .mp3 files from pixabay.com/music or incompetech.com.
+      4. NO YouTube video links.
+      
+      Return JSON ONLY:
+      { "title": "Track Title", "url": "https://...direct-link.mp3", "source": "Pixabay/Incompetech" }`,
       config: {
-        thinkingConfig: { thinkingBudget: 0 },
+        tools: [{ googleSearch: {}}],
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            topics: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            }
+            title: { type: Type.STRING },
+            url: { type: Type.STRING },
+            source: { type: Type.STRING }
           },
-          required: ["topics"]
+          required: ["title", "url", "source"]
         }
       }
     });
-    const data = JSON.parse(response.text || "{}");
-    return Array.isArray(data.topics) ? data.topics.slice(0, 5) : ["Rise of Ancient Rome", "The Great Pyramids Mystery", "Aztec Temple Discovery"];
+    
+    const track = JSON.parse(response.text || "null");
+    if (track && track.url && (track.url.includes('pixabay') || track.url.includes('incompetech'))) {
+      return track;
+    }
+    return null;
   } catch (e) {
-    return ["Ancient Civilizations", "Lost Empires"];
-  }
-};
-
-/**
- * تولید فکت‌های کوتاه مستند برای نمایش در زمان رندر پازل
- */
-export const generateDocumentarySnippets = async (topic: string): Promise<string[]> => {
-  const ai = getAIInstance();
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `For the topic "${topic}", provide 5 extremely short, high-impact documentary facts (max 12 words each). Focus on "Did you know?" style. Return as a JSON array of strings.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            snippets: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            }
-          },
-          required: ["snippets"]
-        }
-      }
-    });
-    const data = JSON.parse(response.text || "{}");
-    return data.snippets || [];
-  } catch {
-    return [
-      "Discovery changes our understanding of the era.",
-      "Evidence suggests a complex social structure.",
-      "The precision of this artifact remains a mystery.",
-      "Ancient engineering continues to baffle experts.",
-      "This moment defined the course of local history."
-    ];
-  }
-};
-
-export const generateVisualPromptFromTopic = async (topic: string): Promise<string> => {
-  const ai = getAIInstance();
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Topic: "${topic}". Create a high-detail historical documentary cinematic visual prompt for an image generation model. Focus on human history, artifacts, or ancient settings. No text.`,
-    });
-    return response.text?.trim() || topic;
-  } catch {
-    return topic;
-  }
-};
-
-export const fetchFactNarrative = async (): Promise<string> => {
-  const ai = getAIInstance();
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: "Tell me one high-impact historical fact in one engaging paragraph. Focus strictly on documented human history or ancient civilizations for a documentary short.",
-    });
-    return response.text?.trim() || "A legendary historical event.";
-  } catch {
-    return "A high-impact historical discovery.";
+    return null;
   }
 };
 
 export const generateArtImage = async (style: ArtStyle, subject: string, attempt: number = 0): Promise<ArtGenerationResponse> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const prompt = `Highly detailed, professional cinematic digital art, masterpiece. Historical Documentary Scene: ${subject}. Style: ${style}. No text. Full vertical 9:16 composition. High resolution, 8k.`;
-  const MAX_ATTEMPTS = 3;
+  const prompt = `Professional cinematic coloring studio art, high contrast, clean outlines. Theme: ${subject}. Style: ${style}. 9:16 vertical aspect ratio. 4k resolution feel.`;
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
@@ -125,31 +78,17 @@ export const generateArtImage = async (style: ArtStyle, subject: string, attempt
       config: { imageConfig: { aspectRatio: "9:16" } }
     });
     let imageUrl = "";
-    if (response.candidates && response.candidates.length > 0) {
-      const candidate = response.candidates[0];
-      if (candidate.content && candidate.content.parts) {
-        for (const part of candidate.content.parts) {
-          if (part.inlineData && part.inlineData.data) {
-            imageUrl = `data:image/png;base64,${part.inlineData.data}`;
-            break;
-          }
+    if (response.candidates?.[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData?.data) {
+          imageUrl = `data:image/png;base64,${part.inlineData.data}`;
+          break;
         }
       }
     }
-    if (!imageUrl) {
-      if (attempt < MAX_ATTEMPTS) {
-        await delay(1000 * (attempt + 1));
-        return generateArtImage(style, subject, attempt + 1);
-      }
-      throw new Error("Synthesis Failed: No image data returned.");
-    }
     return { imageUrl };
   } catch (error: any) {
-    const isTransient = error?.message?.includes('500') || error?.message?.includes('xhr') || error?.message?.includes('RPC');
-    if (isTransient && attempt < MAX_ATTEMPTS) {
-      await delay(1000 * (attempt + 1));
-      return generateArtImage(style, subject, attempt + 1);
-    }
+    if (attempt < 2) return generateArtImage(style, subject, attempt + 1);
     throw error;
   }
 };
@@ -159,7 +98,9 @@ export const generateYouTubeMetadata = async (subject: string, style: ArtStyle):
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `You are a History Documentary YouTube Expert. Topic: "${subject}". Task: Create high-CTR Shorts metadata in JSON format. Focus on 'Mystery', 'History', and 'Discovery'.`,
+      contents: `Create viral YouTube Shorts metadata for a puzzle reveal video about: "${subject}". 
+      The style is ${style}. Include a clickbaity title, a description with a curiosity loop, and 10 relevant tags. 
+      Also provide a CTR strategy summary. Return JSON.`,
       config: { 
         responseMimeType: "application/json",
         responseSchema: {
@@ -175,7 +116,63 @@ export const generateYouTubeMetadata = async (subject: string, style: ArtStyle):
       }
     });
     return JSON.parse(response.text || "{}");
-  } catch {
-    return { title: "The Hidden Truth of History...", description: "A historical journey.", tags: ["history", "discovery", "shorts"], ctr_strategy: "Mystery hook." };
-  }
+  } catch { return { title: "New Discovery", description: "History revealed.", tags: ["shorts"], ctr_strategy: "Mystery" }; }
 };
+
+export const generateDocumentarySnippets = async (topic: string): Promise<string[]> => {
+  const ai = getAIInstance();
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Provide 5 mind-blowing short facts for "${topic}". Each fact must be under 80 characters. Return as a JSON array of strings.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: { snippets: { type: Type.ARRAY, items: { type: Type.STRING } } },
+          required: ["snippets"]
+        }
+      }
+    });
+    const data = JSON.parse(response.text || "{}");
+    return data.snippets || ["Did you know this was hidden?", "The secret is in the details."];
+  } catch { return ["Unknown History", "Fact of the day"]; }
+};
+
+export const generateVisualPromptFromTopic = async (topic: string): Promise<string> => {
+  const ai = getAIInstance();
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Convert this topic into a highly descriptive cinematic visual prompt for an image generator: "${topic}".`,
+  });
+  return response.text?.trim() || topic;
+};
+
+export const fetchFactNarrative = async (): Promise<string> => {
+  const ai = getAIInstance();
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: "Tell me one high-impact, mysterious historical fact that would be amazing to reveal in a puzzle. Under 100 characters.",
+  });
+  return response.text?.trim() || "A legendary historical event.";
+};
+
+export const getTrendingTopics = async (): Promise<string[]> => {
+    const ai = getAIInstance();
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: "List 5 trending mystery, history, or science topics perfect for viral documentary shorts. JSON format.",
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: { topics: { type: Type.ARRAY, items: { type: Type.STRING } } },
+            required: ["topics"]
+          }
+        }
+      });
+      const data = JSON.parse(response.text || "{}");
+      return data.topics || ["Ancient History", "Deep Space"];
+    } catch { return ["Mystery Story", "Discovery"]; }
+  };

@@ -94,7 +94,8 @@ const SmartMusicFinder: React.FC<SmartMusicFinderProps> = ({ currentSubject, onS
         target = { title: random.title, url: random.url, source: 'Internal' };
         setProxyType('INTERNAL');
       } else {
-        target = await findSmartMusic(currentSubject);
+        // Use mood-based selection with default mood
+        target = await findSmartMusicByMood('Mysterious Ambient', currentSubject);
       }
 
       if (target && target.url) {

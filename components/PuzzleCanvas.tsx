@@ -6,7 +6,6 @@ import { renderPuzzleFrame } from '../utils/puzzleRenderer';
 import { FINALE_PAUSE, WAVE_DURATION } from '../utils/finaleManager';
 import { sonicEngine } from '../services/proceduralAudio';
 import PuzzleOverlay from './puzzle/PuzzleOverlay';
-import DocumentaryOverlay from './puzzle/DocumentaryOverlay';
 
 interface PuzzleCanvasProps {
   imageUrl: string;
@@ -39,7 +38,6 @@ const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isReady, setIsReady] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
-  const [progress, setProgress] = useState(0);
   
   const vWidth = 1080;
   const vHeight = 2280;
@@ -195,11 +193,11 @@ const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(({
         isShorts: true,
         physicsPieces: isPhysicsActiveRef.current ? physicsPiecesData : undefined,
         docSnippets: showDocumentaryTips ? docSnippets : [],
+        storyArc: showDocumentaryTips ? (storyArc || null) : null,
         channelLogo: logoImgRef.current || undefined
       });
       
       const progressPercent = (Math.min(elapsedSinceStart, totalDuration) / totalDuration) * 100;
-      setProgress(progressPercent);
       onProgress(progressPercent);
       animationRef.current = requestAnimationFrame(loop);
     }
@@ -220,13 +218,6 @@ const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(({
   return (
     <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
       <PuzzleOverlay isLoading={!isReady && !!imageUrl} error={null} isShorts={true} topicCategory={topicCategory} buildProgress={buildProgress} />
-      <DocumentaryOverlay
-        progress={progress}
-        snippets={docSnippets}
-        storyArc={storyArc || undefined}
-        isEnabled={showDocumentaryTips}
-        isSolving={isSolving}
-      />
       <canvas ref={canvasRef} width={vWidth} height={vHeight} className="block w-full h-full object-contain bg-black" />
     </div>
   );

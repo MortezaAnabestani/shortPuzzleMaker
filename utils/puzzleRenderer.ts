@@ -1,6 +1,6 @@
 
 import { Piece } from '../hooks/usePuzzleLogic';
-import { PieceShape, MovementType, PuzzleBackground } from '../types';
+import { PieceShape, MovementType, PuzzleBackground, StoryArc } from '../types';
 import { getFinaleState, getDiagonalWaveY } from './finaleManager';
 import { envEngine } from './environmentRenderer';
 import { renderOutroCard } from './outroRenderer';
@@ -18,7 +18,8 @@ export interface RenderOptions {
   isShorts: boolean;
   particles: any[];
   physicsPieces?: Map<number, { x: number; y: number; angle: number }>;
-  docSnippets?: string[]; 
+  docSnippets?: string[];
+  storyArc?: StoryArc | null;
   channelLogo?: HTMLImageElement;
 }
 
@@ -89,7 +90,7 @@ const calculateKineticTransform = (p: Piece, t: number, movement: MovementType, 
 };
 
 export const renderPuzzleFrame = ({
-  ctx, img, pieces, elapsed, totalDuration, shape, movement, background, physicsPieces, docSnippets = [], channelLogo
+  ctx, img, pieces, elapsed, totalDuration, shape, movement, background, physicsPieces, docSnippets = [], storyArc, channelLogo
 }: RenderOptions): number => {
   const vWidth = 1080;
   const vHeight = 2280; 
@@ -176,25 +177,61 @@ export const renderPuzzleFrame = ({
   }
   ctx.restore();
 
-  // --- 3. DOCUMENTARY SNIPPETS (About the Puzzle) ---
+  // --- 3. STORY ARC & DOCUMENTARY SNIPPETS ---
   // Only show during assembly, before physics/outro takes over
-  if (docSnippets.length > 0 && !physicsPieces) {
+  if (!physicsPieces) {
     const progressPercent = (Math.min(elapsed, totalDuration) / totalDuration) * 100;
-    const thresholds = [15, 35, 55, 75, 90];
-    const activeIdx = thresholds.findIndex(t => progressPercent >= t && progressPercent < t + 9);
-    
-    if (activeIdx !== -1 && docSnippets[activeIdx]) {
-      const text = docSnippets[activeIdx];
+    let text = '';
+    let label = 'DID YOU KNOW?';
+    let labelColor = 'rgba(70, 140, 255, 1)';
+    let borderColor = 'rgba(70, 140, 255, 0.4)';
+
+    // Prioritize storyArc over docSnippets
+    if (storyArc) {
+      if (progressPercent >= 5 && progressPercent < 15) {
+        text = storyArc.hook;
+        label = 'MYSTERY HOOK';
+        labelColor = 'rgba(255, 220, 100, 1)';
+        borderColor = 'rgba(255, 220, 100, 0.4)';
+      } else if (progressPercent >= 20 && progressPercent < 30) {
+        text = storyArc.buildup[0] || '';
+        label = 'DISCOVERY';
+      } else if (progressPercent >= 40 && progressPercent < 50) {
+        text = storyArc.buildup[1] || '';
+        label = 'DISCOVERY';
+      } else if (progressPercent >= 60 && progressPercent < 70) {
+        text = storyArc.buildup[2] || '';
+        label = 'DISCOVERY';
+      } else if (progressPercent >= 85 && progressPercent < 92) {
+        text = storyArc.climax;
+        label = 'REVELATION';
+        labelColor = 'rgba(200, 100, 255, 1)';
+        borderColor = 'rgba(200, 100, 255, 0.4)';
+      } else if (progressPercent >= 95) {
+        text = storyArc.reveal;
+        label = 'TRUTH REVEALED';
+        labelColor = 'rgba(100, 255, 150, 1)';
+        borderColor = 'rgba(100, 255, 150, 0.4)';
+      }
+    } else if (docSnippets.length > 0) {
+      const thresholds = [15, 35, 55, 75, 90];
+      const activeIdx = thresholds.findIndex(t => progressPercent >= t && progressPercent < t + 9);
+      if (activeIdx !== -1 && docSnippets[activeIdx]) {
+        text = docSnippets[activeIdx];
+      }
+    }
+
+    if (text) {
       ctx.save();
-      const boxW = vWidth * 0.92; 
+      const boxW = vWidth * 0.92;
       const boxX = (vWidth - boxW) / 2;
-      const boxY = vHeight * 0.74; 
-      
-      ctx.font = 'bold 32px Inter, sans-serif'; 
-      const lines = wrapText(ctx, text, boxW - 140); 
+      const boxY = vHeight * 0.74;
+
+      ctx.font = 'bold 32px Inter, sans-serif';
+      const lines = wrapText(ctx, text, boxW - 140);
       const lineHeight = 54;
       const boxH = 180 + (lines.length * lineHeight);
-      
+
       const floatY = Math.sin(elapsed / 600) * 8;
       ctx.translate(0, floatY);
 
@@ -205,15 +242,15 @@ export const renderPuzzleFrame = ({
       ctx.fillStyle = grad;
       ctx.roundRect(boxX, boxY, boxW, boxH, 50);
       ctx.fill();
-      
-      ctx.strokeStyle = 'rgba(70, 140, 255, 0.4)';
+
+      ctx.strokeStyle = borderColor;
       ctx.lineWidth = 4;
       ctx.stroke();
 
-      // "DID YOU KNOW?" Label
-      ctx.fillStyle = 'rgba(70, 140, 255, 1)';
+      // Label (Dynamic based on phase)
+      ctx.fillStyle = labelColor;
       ctx.font = 'black 24px Inter, sans-serif';
-      ctx.fillText('DID YOU KNOW?', boxX + 70, boxY + 75);
+      ctx.fillText(label, boxX + 70, boxY + 75);
 
       // Divider Line
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
@@ -225,7 +262,7 @@ export const renderPuzzleFrame = ({
 
       // Content Text
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 32px Inter, sans-serif'; 
+      ctx.font = 'bold 32px Inter, sans-serif';
       lines.forEach((line, i) => {
         ctx.fillText(line, boxX + 70, boxY + 175 + (i * lineHeight));
       });

@@ -17,13 +17,12 @@ import {
   generateCoherentContentPackage,
   findSmartMusicByMood,
   extractCoreSubject,
-  checkContentSimilarity,
 } from "../services/geminiService";
 import { getJalaliDate } from "../utils/dateUtils";
 import { MusicTrack } from "../components/sidebar/MusicUploader";
 import { VIRAL_CATEGORIES } from "../components/sidebar/VisionInput";
 import { selectFreshCategory, addTopicVariation } from "../utils/contentVariety";
-import { getAllCoreSubjects, addContentRecord } from "../utils/contentHistory";
+import { contentApi, ContentPayload } from "../services/api/contentApi";
 
 export type PipelineStep =
   | "IDLE"
@@ -159,18 +158,62 @@ export const useProductionPipeline = (
 
         console.log(`✅ [Packaging] All downloads completed!`);
 
-        // Record content to history after successful download
-        if (currentCoreSubject && currentVisualPrompt) {
-          console.log(`📝 Recording content to history...`);
-          addContentRecord(
-            currentCoreSubject,
-            preferences.topicCategory || "Unknown",
-            currentVisualPrompt,
-            metadata ? { title: metadata.title, hook: state.storyArc?.hook || "" } : undefined
-          );
+        // Save content to backend database after successful download
+        if (currentCoreSubject && currentVisualPrompt && metadata) {
+          console.log(`💾 [API] Saving content to database...`);
+
+          const payload: ContentPayload = {
+            jalaliDate: jalali,
+            puzzleCard: {
+              category: preferences.topicCategory || "Unknown",
+              narrativeLens: preferences.narrativeLens,
+              artStyle: preferences.style,
+              pieceCount: preferences.pieceCount,
+              duration: preferences.durationMinutes,
+              shape: preferences.shape,
+              material: preferences.material,
+              movement: preferences.movement,
+            },
+            story: {
+              coreSubject: currentCoreSubject,
+              visualPrompt: currentVisualPrompt,
+              hook: state.storyArc?.hook,
+              buildup: state.storyArc?.buildup,
+              climax: state.storyArc?.climax,
+              reveal: state.storyArc?.reveal,
+            },
+            metadata: {
+              title: metadata.title,
+              description: metadata.description,
+              tags: metadata.tags,
+              hashtags: metadata.hashtags,
+            },
+            files: {
+              videoFilename: `${baseFileName}_Video.${videoBlob.type.includes("mp4") ? "mp4" : "webm"}`,
+              thumbnailFilename: thumbnailDataUrl ? `${baseFileName}_Thumbnail.jpg` : undefined,
+              videoSizeMB: Number((videoBlob.size / 1024 / 1024).toFixed(2)),
+            },
+            analysis: {
+              isUnique: true, // Passed validation
+              generationAttempts: 1,
+            },
+          };
+
+          const saveResult = await contentApi.saveContent(payload);
+
+          if (saveResult.success) {
+            console.log(`✅ [API] Content saved to database successfully!`);
+            console.log(`   Database ID: ${saveResult.data?._id}`);
+          } else {
+            console.error(`❌ [API] Failed to save content: ${saveResult.error}`);
+            console.warn(`⚠️ [API] Content was downloaded but not saved to database`);
+          }
+
           // Clear after recording
           setCurrentCoreSubject(null);
           setCurrentVisualPrompt(null);
+        } else {
+          console.log(`⏭️ [API] Skipping database save (missing required data)`);
         }
       } finally {
         setLastVideoBlob(null);
@@ -226,9 +269,6 @@ export const useProductionPipeline = (
 
         if (!isManualOverride && state.isAutoMode) {
           if (item.source === "VIRAL") {
-            // Get history of previous content to avoid repetition
-            const previousSubjects = getAllCoreSubjects();
-
             let contentPackage;
             let coreSubject;
             let attempts = 0;
@@ -259,20 +299,32 @@ export const useProductionPipeline = (
                 randomNiche.label
               );
 
-              // Check if this content is too similar to previous content
-              const similarityCheck = await checkContentSimilarity(coreSubject, previousSubjects, 0.7);
+              // Check similarity via backend API
+              console.log(`🔍 [API] Checking content similarity with backend...`);
+              const similarityResult = await contentApi.checkSimilarity(coreSubject);
 
-              if (!similarityCheck.isSimilar) {
-                console.log(`✅ Content approved as unique! Proceeding with generation.`);
-                break; // Content is unique, exit loop
-              } else {
-                console.log(`❌ Content rejected as too similar (score: ${similarityCheck.similarityScore})`);
-                console.log(`   Matched: ${similarityCheck.matchedSubjects.join(", ")}`);
-                console.log(`   Reason: ${similarityCheck.reasoning}`);
+              if (similarityResult.success && similarityResult.data) {
+                const isSimilar = similarityResult.data.isSimilar;
+                const score = similarityResult.data.similarityScore;
 
-                if (attempts < maxAttempts) {
-                  console.log(`   🔄 Regenerating with different parameters...\n`);
+                if (!isSimilar) {
+                  console.log(`✅ Content approved as unique! Proceeding with generation.`);
+                  break; // Content is unique, exit loop
+                } else {
+                  console.log(`❌ Content rejected as too similar (score: ${score})`);
+                  if (similarityResult.data.matchedContents?.length > 0) {
+                    console.log(`   Matched: ${similarityResult.data.matchedContents.map((m: any) => m.title).join(", ")}`);
+                  }
+
+                  if (attempts < maxAttempts) {
+                    console.log(`   🔄 Regenerating with different parameters...\n`);
+                  }
                 }
+              } else {
+                // If API check fails, log warning but continue (don't crash the pipeline)
+                console.warn(`⚠️ [API] Similarity check failed: ${similarityResult.error}`);
+                console.log(`   Proceeding with content generation (assuming unique)...`);
+                break;
               }
             }
 

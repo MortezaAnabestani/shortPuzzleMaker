@@ -4,7 +4,7 @@
  * اتصال به Backend برای مدیریت محتوا
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -69,7 +69,7 @@ class ContentApiService {
     try {
       console.log(`🔌 [API] Checking connection to ${this.baseUrl}...`);
 
-      const response = await fetch(`${this.baseUrl}/health`, {
+      const response = await fetch(`${this.baseUrl}/api/health`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -101,7 +101,7 @@ class ContentApiService {
       console.log(`   Core Subject: "${payload.story.coreSubject.substring(0, 50)}..."`);
       console.log(`   Category: ${payload.puzzleCard.category}`);
 
-      const response = await fetch(`${this.baseUrl}/content`, {
+      const response = await fetch(`${this.baseUrl}/api/content`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -130,7 +130,7 @@ class ContentApiService {
     try {
       console.log(`🔍 [API] Checking content similarity...`);
 
-      const response = await fetch(`${this.baseUrl}/content/check-similarity`, {
+      const response = await fetch(`${this.baseUrl}/api/content/check-similarity`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ coreSubject })
@@ -157,7 +157,7 @@ class ContentApiService {
    */
   async getStats(): Promise<ApiResponse<any>> {
     try {
-      const response = await fetch(`${this.baseUrl}/content/stats/overview`, {
+      const response = await fetch(`${this.baseUrl}/api/content/stats/overview`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });

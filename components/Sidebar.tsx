@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Settings2,
   Play,
@@ -11,6 +11,8 @@ import {
   Eye,
   BookOpen,
   User,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { UserPreferences, PieceShape, TopicType, PuzzleBackground } from "../types";
 import { PipelineStep } from "../hooks/useProductionPipeline";
@@ -24,7 +26,7 @@ import GifUploader from "./sidebar/GifUploader";
 import SnapSoundUploader from "./sidebar/SnapSoundUploader";
 import ChannelLogoUploader from "./sidebar/ChannelLogoUploader";
 import SmartMusicFinder from "./sidebar/SmartMusicFinder";
-import ContentHistoryPanel from "./sidebar/ContentHistoryPanel";
+import { contentApi } from "../services/api/contentApi";
 
 interface SidebarProps {
   preferences: UserPreferences;
@@ -75,6 +77,27 @@ const Sidebar: React.FC<SidebarProps> = ({
   onGifChange,
   onChannelLogoChange,
 }) => {
+  const [dbConnected, setDbConnected] = useState(false);
+  const [dbError, setDbError] = useState<string | null>(null);
+
+  // Check database connection on mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      const isConnected = await contentApi.checkConnection();
+      setDbConnected(isConnected);
+
+      if (!isConnected) {
+        const status = contentApi.getConnectionStatus();
+        setDbError(status.lastError || "Connection failed");
+      }
+    };
+
+    checkConnection();
+    // Check connection every 30 seconds
+    const interval = setInterval(checkConnection, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <aside className="w-[400px] flex flex-col h-full bg-[#050508] border-r border-white/5 text-slate-300 font-sans z-40 overflow-hidden shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
       <div className="shrink-0 px-4 py-3 bg-zinc-950/50 border-b border-white/5 backdrop-blur-md flex items-center justify-between">
@@ -94,6 +117,31 @@ const Sidebar: React.FC<SidebarProps> = ({
             {isGenerating ? "Uplink_Active" : "Standby"}
           </span>
         </div>
+      </div>
+
+      {/* Database Connection Status */}
+      <div className={`shrink-0 px-4 py-2 border-b border-white/5 flex items-center justify-between ${
+        dbConnected ? "bg-emerald-950/20" : "bg-red-950/20"
+      }`}>
+        <div className="flex items-center gap-2">
+          {dbConnected ? (
+            <Wifi className="w-3 h-3 text-emerald-500" />
+          ) : (
+            <WifiOff className="w-3 h-3 text-red-500" />
+          )}
+          <span className="text-[9px] font-bold uppercase tracking-wider">
+            {dbConnected ? (
+              <span className="text-emerald-400">Database Connected</span>
+            ) : (
+              <span className="text-red-400">Database Offline</span>
+            )}
+          </span>
+        </div>
+        {!dbConnected && dbError && (
+          <span className="text-[7px] text-red-500/70 font-mono max-w-[150px] truncate" title={dbError}>
+            {dbError}
+          </span>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-6 space-y-8">
@@ -261,11 +309,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           )}
           {isSolving ? "TERMINATE SEQ" : "EXECUTE SOLVE"}
         </button>
-
-        {/* Content History Panel */}
-        <div className="mt-4 pt-4 border-t border-white/10">
-          <ContentHistoryPanel />
-        </div>
       </div>
     </aside>
   );

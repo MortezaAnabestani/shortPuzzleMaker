@@ -16,6 +16,8 @@ import {
   Server,
 } from "lucide-react";
 import { findSmartMusicByMood, SmartMusicTrack, SONIC_LIBRARY } from "../../services/geminiService";
+import { assetApi } from "../../services/api/assetApi";
+import { MusicMood } from "../../types";
 
 /**
  * 🛠 تنظیمات پروکسی اختصاصی Cloudflare
@@ -29,6 +31,7 @@ interface SmartMusicFinderProps {
 }
 
 type SearchState = "IDLE" | "SEARCHING" | "DOWNLOADING" | "READY" | "ERROR";
+type SourceType = "BACKEND" | "AI_SEARCH" | "FALLBACK";
 
 const SmartMusicFinder: React.FC<SmartMusicFinderProps> = ({ currentSubject, onSelectTrack, disabled }) => {
   const [state, setState] = useState<SearchState>("IDLE");
@@ -36,7 +39,8 @@ const SmartMusicFinder: React.FC<SmartMusicFinderProps> = ({ currentSubject, onS
   const [track, setTrack] = useState<SmartMusicTrack | null>(null);
   const [localUrl, setLocalUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [proxyType, setProxyType] = useState<"CF_WORKER" | "PUBLIC_CORS" | "INTERNAL">("INTERNAL");
+  const [proxyType, setProxyType] = useState<"CF_WORKER" | "PUBLIC_CORS" | "INTERNAL" | "BACKEND">("INTERNAL");
+  const [sourceType, setSourceType] = useState<SourceType>("BACKEND");
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
 
   const clearLocalUrl = () => {
@@ -97,23 +101,66 @@ const SmartMusicFinder: React.FC<SmartMusicFinderProps> = ({ currentSubject, onS
     return null;
   };
 
-  const handleSearch = async (forceSafe = false) => {
+  const handleSearch = async (forceSafe = false, skipBackend = false) => {
     if (!currentSubject && !forceSafe) return;
 
     setState("SEARCHING");
-    setStatusMsg(forceSafe ? "Mounting Calm Asset..." : "Finding Slow/Medium Rhythm...");
     setIsPlaying(false);
     clearLocalUrl();
 
     try {
       let target: SmartMusicTrack | null = null;
+      let blobUrl: string | null = null;
 
+      // 🥇 Tier 1: Try Backend First (unless explicitly skipped)
+      if (!forceSafe && !skipBackend) {
+        setStatusMsg("Loading from Backend...");
+        setProxyType("BACKEND");
+        setSourceType("BACKEND");
+        console.log(`🎵 [SmartMusic] Trying backend first...`);
+
+        try {
+          const backendUrl = await assetApi.getRandomMusicByMood("calm");
+          if (backendUrl) {
+            target = { title: "Backend Music", url: backendUrl, source: "Backend" };
+            setTrack(target);
+            setState("DOWNLOADING");
+            setStatusMsg("Downloading from Backend...");
+
+            // Direct fetch (no proxy needed for backend)
+            const response = await fetch(backendUrl, {
+              headers: { 'ngrok-skip-browser-warning': 'true' }
+            });
+            if (response.ok) {
+              const blob = await response.blob();
+              blobUrl = URL.createObjectURL(blob);
+
+              if (blobUrl) {
+                console.log(`✅ [SmartMusic] Loaded from backend successfully`);
+                setLocalUrl(blobUrl);
+                setState("READY");
+                setStatusMsg("Backend Music Ready");
+                onSelectTrack(blobUrl, target.title);
+                return; // Success! Exit here
+              }
+            }
+          }
+        } catch (error) {
+          console.warn(`⚠️ [SmartMusic] Backend failed, falling back to AI search...`, error);
+        }
+      }
+
+      // 🥈 Tier 2: AI Search (if backend failed or forceSafe)
       if (forceSafe) {
+        setSourceType("FALLBACK");
         const random = SONIC_LIBRARY[Math.floor(Math.random() * SONIC_LIBRARY.length)];
         target = { title: random.title, url: random.url, source: "Internal" };
         setProxyType("INTERNAL");
+        setStatusMsg("Mounting Calm Asset...");
       } else {
-        // Use mood-based selection with default mood
+        setSourceType("AI_SEARCH");
+        setStatusMsg("Finding Slow/Medium Rhythm...");
+        console.log(`🔍 [SmartMusic] Trying AI search...`);
         target = await findSmartMusicByMood("Mysterious Ambient", currentSubject);
       }
 
@@ -121,9 +168,10 @@ const SmartMusicFinder: React.FC<SmartMusicFinderProps> = ({ currentSubject, onS
         setTrack(target);
         setState("DOWNLOADING");
 
-        const blobUrl = await fetchAudioBlob(target.url);
+        blobUrl = await fetchAudioBlob(target.url);
 
         if (blobUrl) {
+          console.log(`✅ [SmartMusic] Loaded from ${forceSafe ? 'fallback' : 'AI search'}`);
           setLocalUrl(blobUrl);
           setState("READY");
           setStatusMsg("Ambient Ready");
@@ -174,14 +222,18 @@ const SmartMusicFinder: React.FC<SmartMusicFinderProps> = ({ currentSubject, onS
         </div>
         <div
           className={`flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-mono font-bold border ${
-            proxyType === "CF_WORKER"
+            proxyType === "BACKEND"
+              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+              : proxyType === "CF_WORKER"
               ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
               : proxyType === "PUBLIC_CORS"
               ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-              : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+              : "bg-zinc-500/10 border-zinc-500/20 text-zinc-400"
           }`}
         >
-          {proxyType === "CF_WORKER"
+          {proxyType === "BACKEND"
+            ? "BACKEND_DIRECT"
+            : proxyType === "CF_WORKER"
             ? "LOW_TEMPO"
             : proxyType === "PUBLIC_CORS"
             ? "CALM_GATEWAY"

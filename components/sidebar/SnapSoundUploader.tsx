@@ -1,6 +1,7 @@
-import React, { useRef, useState } from "react";
-import { Volume2, Upload, X, CheckCircle2, FileAudio, Waves, Zap, BoxSelect } from "lucide-react";
+import React, { useRef, useState, useEffect } from "react";
+import { Volume2, Upload, X, CheckCircle2, FileAudio, Waves, Zap, BoxSelect, Download } from "lucide-react";
 import { sonicEngine, SoundType } from "../../services/proceduralAudio";
+import { assetApi } from "../../services/api/assetApi";
 
 interface SoundSlot {
   type: SoundType;
@@ -17,7 +18,56 @@ const SOUND_SLOTS: SoundSlot[] = [
 
 const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
   const [loadedSounds, setLoadedSounds] = useState<Set<SoundType>>(new Set());
+  const [loadingFromBackend, setLoadingFromBackend] = useState(false);
   const fileInputs = useRef<Map<SoundType, HTMLInputElement>>(new Map());
+
+  // Mapping بین SoundType و backend sound types
+  const SOUND_TYPE_MAPPING: Record<SoundType, string> = {
+    'SNAP': 'snap',     // جاخوردن پازل
+    'MOVE': 'slide',    // حرکت قطعات
+    'WAVE': 'wave',     // موج نهایی
+    'DESTRUCT': 'fall'  // انفجار/تخریب
+  };
+
+  // بارگذاری خودکار sound effects از backend در صورت وجود
+  useEffect(() => {
+    const loadBackendSounds = async () => {
+      setLoadingFromBackend(true);
+      console.log(`🔊 [SnapSound] Attempting to load sounds from backend...`);
+
+      let loadedCount = 0;
+
+      try {
+        // بارگذاری همه sound effects
+        for (const [soundType, backendType] of Object.entries(SOUND_TYPE_MAPPING)) {
+          try {
+            const soundUrl = await assetApi.getSoundByType(backendType);
+            if (soundUrl) {
+              const response = await fetch(soundUrl);
+              const blob = await response.blob();
+              const file = new File([blob], `${backendType}.mp3`, { type: 'audio/mpeg' });
+              await sonicEngine.setSound(soundType as SoundType, file);
+              setLoadedSounds((prev) => new Set(prev).add(soundType as SoundType));
+              loadedCount++;
+              console.log(`✅ [SnapSound] Loaded ${soundType} from backend`);
+            }
+          } catch (error) {
+            console.warn(`⚠️ [SnapSound] Failed to load ${soundType}:`, error);
+          }
+        }
+
+        if (loadedCount > 0) {
+          console.log(`✅ [SnapSound] Successfully loaded ${loadedCount}/${Object.keys(SOUND_TYPE_MAPPING).length} sounds`);
+        }
+      } catch (error) {
+        console.warn(`⚠️ [SnapSound] Failed to load from backend:`, error);
+      }
+
+      setLoadingFromBackend(false);
+    };
+
+    loadBackendSounds();
+  }, []);
 
   const handleFileChange = async (type: SoundType, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -45,9 +95,17 @@ const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
 
   return (
     <div className="w-full flex flex-col gap-4">
-      <div className="flex items-center gap-2 text-zinc-400 px-1">
-        <Volume2 className="w-4 h-4 text-blue-500" />
-        <span className="text-[10px] font-black uppercase tracking-widest">Audio Profile Studio</span>
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2 text-zinc-400">
+          <Volume2 className="w-4 h-4 text-blue-500" />
+          <span className="text-[10px] font-black uppercase tracking-widest">Audio Profile Studio</span>
+        </div>
+        {loadingFromBackend && (
+          <div className="flex items-center gap-1.5 text-[9px] text-blue-400">
+            <Download className="w-3 h-3 animate-bounce" />
+            <span>Loading...</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-2">

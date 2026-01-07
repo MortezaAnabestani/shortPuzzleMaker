@@ -10,7 +10,7 @@
  */
 
 // 🔧 اگر از Google AI Studio استفاده می‌کنید، URL ngrok را اینجا قرار دهید:
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = "https://unsettledly-intersesamoid-paris.ngrok-free.dev";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -76,11 +76,11 @@ class ContentApiService {
       console.log(`🔌 [API] Checking connection to ${this.baseUrl}...`);
 
       const response = await fetch(`${this.baseUrl}/api/health`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true'  // Skip ngrok warning page
-        }
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true", // Skip ngrok warning page
+        },
       });
 
       if (response.ok) {
@@ -111,12 +111,12 @@ class ContentApiService {
       console.log(`   Category: ${payload.puzzleCard.category}`);
 
       const response = await fetch(`${this.baseUrl}/api/content`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true'
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -127,7 +127,7 @@ class ContentApiService {
         console.log(`   Created at: ${data.data.createdAt}`);
         return { success: true, data: data.data };
       } else {
-        throw new Error(data.error || 'Failed to save content');
+        throw new Error(data.error || "Failed to save content");
       }
     } catch (error: any) {
       console.error(`❌ [API] Save failed:`, error.message);
@@ -143,12 +143,12 @@ class ContentApiService {
       console.log(`🔍 [API] Checking content similarity...`);
 
       const response = await fetch(`${this.baseUrl}/api/content/check-similarity`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true'
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
         },
-        body: JSON.stringify({ coreSubject })
+        body: JSON.stringify({ coreSubject }),
       });
 
       const data = await response.json();
@@ -159,7 +159,7 @@ class ContentApiService {
         console.log(`   Score: ${data.data.similarityScore}`);
         return { success: true, data: data.data };
       } else {
-        throw new Error(data.error || 'Similarity check failed');
+        throw new Error(data.error || "Similarity check failed");
       }
     } catch (error: any) {
       console.error(`❌ [API] Similarity check failed:`, error.message);
@@ -173,11 +173,11 @@ class ContentApiService {
   async getStats(): Promise<ApiResponse<any>> {
     try {
       const response = await fetch(`${this.baseUrl}/api/content/stats/overview`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true'
-        }
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
       });
 
       const data = await response.json();
@@ -186,7 +186,7 @@ class ContentApiService {
         console.log(`📊 [API] Stats retrieved:`, data.data);
         return { success: true, data: data.data };
       } else {
-        throw new Error(data.error || 'Failed to get stats');
+        throw new Error(data.error || "Failed to get stats");
       }
     } catch (error: any) {
       console.error(`❌ [API] Get stats failed:`, error.message);
@@ -200,7 +200,7 @@ class ContentApiService {
   getConnectionStatus(): { isConnected: boolean; lastError: string | null } {
     return {
       isConnected: this.isConnected,
-      lastError: this.lastError
+      lastError: this.lastError,
     };
   }
 }

@@ -1,6 +1,7 @@
 
-import React, { useRef, useState } from 'react';
-import { User, Upload, X, Terminal, ShieldCheck } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { User, Upload, X, Terminal, ShieldCheck, Download } from 'lucide-react';
+import { assetApi } from '../../services/api/assetApi';
 
 interface ChannelLogoUploaderProps {
   onLogoSelect: (url: string | null) => void;
@@ -10,6 +11,32 @@ interface ChannelLogoUploaderProps {
 const ChannelLogoUploader: React.FC<ChannelLogoUploaderProps> = ({ onLogoSelect, disabled }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [loadingFromBackend, setLoadingFromBackend] = useState(false);
+
+  // بارگذاری خودکار لوگو از backend در صورت وجود
+  useEffect(() => {
+    const loadBackendLogo = async () => {
+      setLoadingFromBackend(true);
+      console.log(`🖼️ [ChannelLogo] Attempting to load logo from backend...`);
+
+      try {
+        const logoUrl = await assetApi.getFirstProfileImage();
+        if (logoUrl) {
+          setPreviewUrl(logoUrl);
+          onLogoSelect(logoUrl);
+          console.log(`✅ [ChannelLogo] Loaded logo from backend`);
+        } else {
+          console.log(`⚠️ [ChannelLogo] No logo found in backend`);
+        }
+      } catch (error) {
+        console.warn(`⚠️ [ChannelLogo] Failed to load from backend:`, error);
+      }
+
+      setLoadingFromBackend(false);
+    };
+
+    loadBackendLogo();
+  }, [onLogoSelect]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -33,7 +60,12 @@ const ChannelLogoUploader: React.FC<ChannelLogoUploaderProps> = ({ onLogoSelect,
           <User className="w-3.5 h-3.5 text-blue-500" />
           <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Identity_Asset</span>
         </div>
-        <span className="text-[8px] font-mono text-zinc-600">OUTRO_LOGO</span>
+        <div className="flex items-center gap-2">
+          {loadingFromBackend && (
+            <Download className="w-3 h-3 text-blue-400 animate-bounce" />
+          )}
+          <span className="text-[8px] font-mono text-zinc-600">OUTRO_LOGO</span>
+        </div>
       </div>
 
       <div className="p-3">

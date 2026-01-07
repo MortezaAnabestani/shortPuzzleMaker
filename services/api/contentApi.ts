@@ -2,8 +2,14 @@
  * Content API Service
  *
  * اتصال به Backend برای مدیریت محتوا
+ *
+ * برای استفاده از ngrok (Google AI Studio):
+ * 1. Backend را اجرا کنید: npm run dev
+ * 2. ngrok را اجرا کنید: ngrok http 5000
+ * 3. URL دریافتی را در خط زیر قرار دهید (مثال: 'https://abcd-1234.ngrok-free.app')
  */
 
+// 🔧 اگر از Google AI Studio استفاده می‌کنید، URL ngrok را اینجا قرار دهید:
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 interface ApiResponse<T> {
@@ -71,7 +77,10 @@ class ContentApiService {
 
       const response = await fetch(`${this.baseUrl}/api/health`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'  // Skip ngrok warning page
+        }
       });
 
       if (response.ok) {
@@ -103,7 +112,10 @@ class ContentApiService {
 
       const response = await fetch(`${this.baseUrl}/api/content`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify(payload)
       });
 
@@ -132,7 +144,10 @@ class ContentApiService {
 
       const response = await fetch(`${this.baseUrl}/api/content/check-similarity`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({ coreSubject })
       });
 
@@ -159,7 +174,10 @@ class ContentApiService {
     try {
       const response = await fetch(`${this.baseUrl}/api/content/stats/overview`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
       });
 
       const data = await response.json();

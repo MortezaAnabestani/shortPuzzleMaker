@@ -237,8 +237,18 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
           `📹 [RecordingSystem] Recording stopped! Blob size: ${(finalBlob.size / 1024 / 1024).toFixed(2)}MB`
         );
         console.log(`   Chunks collected: ${chunksRef.current.length}`);
-        console.log(`   Calling onRecordingComplete...`);
+        console.log(`   MIME type: ${currentMimeType.current}`);
+        console.log(`   Calling onRecordingComplete with blob...`);
+
+        // CRITICAL: Verify blob is valid
+        if (finalBlob.size === 0) {
+          console.error(`❌ [RecordingSystem] FATAL: Blob is empty! No data was recorded!`);
+        } else {
+          console.log(`✅ [RecordingSystem] Blob is valid, calling callback...`);
+        }
+
         onRecordingComplete(finalBlob);
+        console.log(`✅ [RecordingSystem] onRecordingComplete called successfully`);
       };
 
       recorder.start(1000);

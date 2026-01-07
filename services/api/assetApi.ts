@@ -4,7 +4,7 @@
  * دسترسی به فایل‌های استاتیک از Backend (موسیقی، sound effects، تصاویر)
  */
 
-const API_BASE_URL = "https://unsettledly-intersesamoid-paris.ngrok-free.dev";
+import { API_ENDPOINTS, DEFAULT_HEADERS, BACKEND_URL } from '../../config/env';
 
 interface AssetCatalog {
   music: {
@@ -44,11 +44,10 @@ interface ImageAsset {
 }
 
 class AssetApiService {
-  private baseUrl: string;
   private catalog: AssetCatalog | null = null;
 
   constructor() {
-    this.baseUrl = API_BASE_URL;
+    // No need to store baseUrl anymore, use API_ENDPOINTS directly
   }
 
   /**
@@ -60,14 +59,11 @@ class AssetApiService {
     }
 
     try {
-      console.log(`📦 [Assets] Fetching catalog from ${this.baseUrl}...`);
+      console.log(`📦 [Assets] Fetching catalog from ${BACKEND_URL}...`);
 
-      const response = await fetch(`${this.baseUrl}/api/assets/catalog`, {
+      const response = await fetch(API_ENDPOINTS.ASSETS_CATALOG, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: DEFAULT_HEADERS,
       });
 
       if (response.ok) {
@@ -89,7 +85,7 @@ class AssetApiService {
    * دریافت URL کامل یک asset
    */
   getAssetUrl(filename: string): string {
-    return `${this.baseUrl}/assets/${filename}`;
+    return `${API_ENDPOINTS.ASSETS}/${filename}`;
   }
 
   /**
@@ -99,12 +95,9 @@ class AssetApiService {
     try {
       console.log(`🎵 [Assets] Fetching music for mood: ${mood}...`);
 
-      const response = await fetch(`${this.baseUrl}/api/assets/music?mood=${mood}`, {
+      const response = await fetch(`${API_ENDPOINTS.ASSETS_MUSIC}?mood=${mood}`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: DEFAULT_HEADERS,
       });
 
       if (response.ok) {
@@ -144,12 +137,9 @@ class AssetApiService {
     try {
       console.log(`🔊 [Assets] Fetching sounds for type: ${type}...`);
 
-      const response = await fetch(`${this.baseUrl}/api/assets/sounds?type=${type}`, {
+      const response = await fetch(`${API_ENDPOINTS.ASSETS_SOUNDS}?type=${type}`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: DEFAULT_HEADERS,
       });
 
       if (response.ok) {
@@ -190,12 +180,9 @@ class AssetApiService {
     try {
       console.log(`🖼️ [Assets] Fetching profile images...`);
 
-      const response = await fetch(`${this.baseUrl}/api/assets/images`, {
+      const response = await fetch(API_ENDPOINTS.ASSETS_IMAGES, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: DEFAULT_HEADERS,
       });
 
       if (response.ok) {
@@ -235,9 +222,7 @@ class AssetApiService {
     try {
       const url = this.getAssetUrl(filename);
       const response = await fetch(url, {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: DEFAULT_HEADERS,
       });
 
       if (response.ok) {

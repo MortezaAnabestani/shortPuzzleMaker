@@ -2,15 +2,9 @@
  * Content API Service
  *
  * اتصال به Backend برای مدیریت محتوا
- *
- * برای استفاده از ngrok (Google AI Studio):
- * 1. Backend را اجرا کنید: npm run dev
- * 2. ngrok را اجرا کنید: ngrok http 5000
- * 3. URL دریافتی را در خط زیر قرار دهید (مثال: 'https://abcd-1234.ngrok-free.app')
  */
 
-// 🔧 اگر از Google AI Studio استفاده می‌کنید، URL ngrok را اینجا قرار دهید:
-const API_BASE_URL = "https://unsettledly-intersesamoid-paris.ngrok-free.dev";
+import { API_ENDPOINTS, DEFAULT_HEADERS, BACKEND_URL } from '../../config/env';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -59,12 +53,10 @@ export interface ContentPayload {
 }
 
 class ContentApiService {
-  private baseUrl: string;
   private isConnected: boolean = false;
   private lastError: string | null = null;
 
   constructor() {
-    this.baseUrl = API_BASE_URL;
     this.checkConnection();
   }
 
@@ -73,14 +65,11 @@ class ContentApiService {
    */
   async checkConnection(): Promise<boolean> {
     try {
-      console.log(`🔌 [API] Checking connection to ${this.baseUrl}...`);
+      console.log(`🔌 [API] Checking connection to ${BACKEND_URL}...`);
 
-      const response = await fetch(`${this.baseUrl}/api/health`, {
+      const response = await fetch(API_ENDPOINTS.HEALTH, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true", // Skip ngrok warning page
-        },
+        headers: DEFAULT_HEADERS,
       });
 
       if (response.ok) {
@@ -110,12 +99,9 @@ class ContentApiService {
       console.log(`   Core Subject: "${payload.story.coreSubject.substring(0, 50)}..."`);
       console.log(`   Category: ${payload.puzzleCard.category}`);
 
-      const response = await fetch(`${this.baseUrl}/api/content`, {
+      const response = await fetch(API_ENDPOINTS.CONTENT, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: DEFAULT_HEADERS,
         body: JSON.stringify(payload),
       });
 
@@ -142,12 +128,9 @@ class ContentApiService {
     try {
       console.log(`🔍 [API] Checking content similarity...`);
 
-      const response = await fetch(`${this.baseUrl}/api/content/check-similarity`, {
+      const response = await fetch(API_ENDPOINTS.CONTENT_SIMILARITY, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: DEFAULT_HEADERS,
         body: JSON.stringify({ coreSubject }),
       });
 
@@ -172,12 +155,9 @@ class ContentApiService {
    */
   async getStats(): Promise<ApiResponse<any>> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/content/stats/overview`, {
+      const response = await fetch(API_ENDPOINTS.CONTENT_STATS, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: DEFAULT_HEADERS,
       });
 
       const data = await response.json();

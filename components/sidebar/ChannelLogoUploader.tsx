@@ -22,8 +22,24 @@ const ChannelLogoUploader: React.FC<ChannelLogoUploaderProps> = ({ onLogoSelect,
       try {
         const logoUrl = await assetApi.getFirstProfileImage();
         if (logoUrl) {
-          setPreviewUrl(logoUrl);
-          onLogoSelect(logoUrl);
+          // Fetch with proper headers to avoid ngrok interstitial
+          const response = await fetch(logoUrl, {
+            headers: {
+              'ngrok-skip-browser-warning': 'true'
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const blob = await response.blob();
+          console.log(`📦 [ChannelLogo] Blob size: ${blob.size} bytes, type: ${blob.type}`);
+
+          // Create blob URL for the image
+          const blobUrl = URL.createObjectURL(blob);
+          setPreviewUrl(blobUrl);
+          onLogoSelect(blobUrl);
           console.log(`✅ [ChannelLogo] Loaded logo from backend`);
         } else {
           console.log(`⚠️ [ChannelLogo] No logo found in backend`);

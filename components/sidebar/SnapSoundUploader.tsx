@@ -43,8 +43,19 @@ const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
           try {
             const soundUrl = await assetApi.getSoundByType(backendType);
             if (soundUrl) {
-              const response = await fetch(soundUrl);
+              const response = await fetch(soundUrl, {
+                headers: {
+                  'ngrok-skip-browser-warning': 'true'
+                }
+              });
+
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+              }
+
               const blob = await response.blob();
+              console.log(`📦 [SnapSound] Blob size for ${soundType}: ${blob.size} bytes, type: ${blob.type}`);
+
               const file = new File([blob], `${backendType}.mp3`, { type: 'audio/mpeg' });
               await sonicEngine.setSound(soundType as SoundType, file);
               setLoadedSounds((prev) => new Set(prev).add(soundType as SoundType));

@@ -43,7 +43,8 @@ class ProceduralAudioEngine {
       const decodedBuffer = await this.ctx.decodeAudioData(arrayBuffer);
       this.buffers.set(type, decodedBuffer);
     } catch (e) {
-      throw new Error(`خطا در پردازش صدا: ${type}`);
+      console.error(`❌ [SonicEngine] Failed to decode ${type}:`, e);
+      throw new Error(`خطا در پردازش صدا: ${type} - ${e instanceof Error ? e.message : 'Unknown error'}`);
     }
   }
 

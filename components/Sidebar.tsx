@@ -13,6 +13,7 @@ import GifUploader from './sidebar/GifUploader';
 import SnapSoundUploader from './sidebar/SnapSoundUploader';
 import ChannelLogoUploader from './sidebar/ChannelLogoUploader';
 import SmartMusicFinder from './sidebar/SmartMusicFinder';
+import ContentHistoryPanel from './sidebar/ContentHistoryPanel';
 
 interface SidebarProps {
   preferences: UserPreferences;
@@ -199,8 +200,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           disabled={!hasImage || isGenerating}
           className={`
             w-full flex items-center justify-center gap-3 py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] transition-all
-            ${isSolving 
-                ? 'bg-red-600/10 text-red-500 border border-red-500/30' 
+            ${isSolving
+                ? 'bg-red-600/10 text-red-500 border border-red-500/30'
                 : 'bg-blue-600 text-white hover:bg-blue-500 shadow-xl shadow-blue-900/20 border border-blue-400/30'}
             disabled:opacity-20
           `}
@@ -208,6 +209,11 @@ const Sidebar: React.FC<SidebarProps> = ({
           {isSolving ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
           {isSolving ? 'TERMINATE SEQ' : 'EXECUTE SOLVE'}
         </button>
+
+        {/* Content History Panel */}
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <ContentHistoryPanel />
+        </div>
       </div>
     </aside>
   );

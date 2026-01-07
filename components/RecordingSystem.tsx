@@ -85,28 +85,89 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({ isRecording, getCanva
   const startRecording = async () => {
     const canvas = getCanvas();
     const audioEl = audioRef.current;
-    if (!canvas || !audioEl) return;
+
+    console.log(`🎬 [RecordingSystem] Starting recording...`);
+    console.log(`   Canvas: ${canvas ? 'OK' : 'MISSING'}`);
+    console.log(`   Audio Element: ${audioEl ? 'OK' : 'MISSING'}`);
+
+    if (!canvas || !audioEl) {
+      console.error(`❌ [RecordingSystem] Cannot start - missing ${!canvas ? 'canvas' : 'audio element'}`);
+      return;
+    }
+
+    console.log(`   Audio src: "${audioEl.src || 'EMPTY'}"`);
+    console.log(`   Audio currentSrc: "${audioEl.currentSrc || 'EMPTY'}"`);
+    console.log(`   Audio readyState: ${audioEl.readyState}`);
 
     try {
       const ctx = sonicEngine.getContext();
       if (ctx && ctx.state === 'suspended') {
+        console.log(`   Resuming suspended audio context...`);
         await ctx.resume();
+      }
+
+      // CRITICAL FIX: Wait for audio to be ready before recording
+      if (audioEl.src || audioEl.currentSrc) {
+        if (audioEl.readyState < 3) {
+          console.log(`⏳ [RecordingSystem] Waiting for audio to load (readyState: ${audioEl.readyState})...`);
+
+          await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('Audio loading timeout after 10s'));
+            }, 10000);
+
+            const onCanPlay = () => {
+              clearTimeout(timeout);
+              audioEl.removeEventListener('canplay', onCanPlay);
+              audioEl.removeEventListener('error', onError);
+              console.log(`✅ [RecordingSystem] Audio ready! (readyState: ${audioEl.readyState})`);
+              resolve();
+            };
+
+            const onError = (e: Event) => {
+              clearTimeout(timeout);
+              audioEl.removeEventListener('canplay', onCanPlay);
+              audioEl.removeEventListener('error', onError);
+              console.error(`❌ [RecordingSystem] Audio load error:`, e);
+              reject(new Error('Audio load failed'));
+            };
+
+            if (audioEl.readyState >= 3) {
+              clearTimeout(timeout);
+              resolve();
+            } else {
+              audioEl.addEventListener('canplay', onCanPlay);
+              audioEl.addEventListener('error', onError);
+              audioEl.load(); // Force reload
+            }
+          });
+        } else {
+          console.log(`✅ [RecordingSystem] Audio already ready (readyState: ${audioEl.readyState})`);
+        }
+      } else {
+        console.warn(`⚠️ [RecordingSystem] No audio source available - recording video only`);
       }
 
       const audioStream = initAudioGraph();
       if (!audioStream) {
+        console.error(`❌ [RecordingSystem] Could not initialize audio stream`);
         throw new Error("Could not initialize audio stream");
       }
 
+      console.log(`   Audio stream tracks: ${audioStream.getAudioTracks().length}`);
+
       // شروع ملایم صدا
-      if (musicGainRef.current) {
+      if (musicGainRef.current && ctx) {
         musicGainRef.current.gain.setValueAtTime(0, ctx.currentTime);
         musicGainRef.current.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 1.0);
       }
 
       // اطمینان از پخش موسیقی
-      if (audioEl.src) {
-        audioEl.play().catch(e => console.warn("Recording Playback Blocked:", e));
+      if (audioEl.src || audioEl.currentSrc) {
+        console.log(`   Starting audio playback...`);
+        audioEl.play()
+          .then(() => console.log(`✅ [RecordingSystem] Audio playing successfully`))
+          .catch(e => console.error(`❌ [RecordingSystem] Audio playback failed:`, e));
       }
 
       const videoStream = (canvas as any).captureStream(60);

@@ -3,19 +3,19 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ArtStyle, PieceShape, PieceMaterial, MovementType, PuzzleState, UserPreferences, TopicType, StoryArc } from '../types';
 import {
   generateArtImage,
-  generateYouTubeMetadata,
   YouTubeMetadata,
   getTrendingTopics,
-  generateVisualPromptFromTopic,
-  generateDocumentarySnippets,
   fetchFactNarrative,
-  findSmartMusic,
   generateCoherentContentPackage,
-  findSmartMusicByMood
+  findSmartMusicByMood,
+  extractCoreSubject,
+  checkContentSimilarity
 } from '../services/geminiService';
 import { getJalaliDate } from '../utils/dateUtils';
 import { MusicTrack } from '../components/sidebar/MusicUploader';
 import { VIRAL_CATEGORIES } from '../components/sidebar/VisionInput';
+import { selectFreshCategory, addTopicVariation } from '../utils/contentVariety';
+import { getAllCoreSubjects, addContentRecord } from '../utils/contentHistory';
 
 export type PipelineStep = 'IDLE' | 'SCAN' | 'MUSIC' | 'SYNTH' | 'METADATA' | 'THUMBNAIL' | 'ANIMATE' | 'RECORDING' | 'PACKAGING';
 
@@ -66,6 +66,8 @@ export const useProductionPipeline = (
   const [isMetadataLoading, setIsMetadataLoading] = useState(false);
   const [thumbnailDataUrl, setThumbnailDataUrl] = useState<string | null>(null);
   const [lastVideoBlob, setLastVideoBlob] = useState<Blob | null>(null);
+  const [currentCoreSubject, setCurrentCoreSubject] = useState<string | null>(null);
+  const [currentVisualPrompt, setCurrentVisualPrompt] = useState<string | null>(null);
   const isExportingRef = useRef(false);
 
   const downloadFile = (name: string, blob: Blob) => {
@@ -115,6 +117,20 @@ export const useProductionPipeline = (
         const res = await fetch(thumbnailDataUrl);
         downloadFile(`${baseFileName}_Thumbnail.jpg`, await res.blob());
       }
+
+      // Record content to history after successful download
+      if (currentCoreSubject && currentVisualPrompt) {
+        console.log(`📝 Recording content to history...`);
+        addContentRecord(
+          currentCoreSubject,
+          preferences.topicCategory || 'Unknown',
+          currentVisualPrompt,
+          metadata ? { title: metadata.title, hook: state.storyArc?.hook || '' } : undefined
+        );
+        // Clear after recording
+        setCurrentCoreSubject(null);
+        setCurrentVisualPrompt(null);
+      }
     } finally {
       setLastVideoBlob(null);
       isExportingRef.current = false;
@@ -155,10 +171,61 @@ export const useProductionPipeline = (
 
       if (!isManualOverride && state.isAutoMode) {
         if (item.source === 'VIRAL') {
-          const randomNiche = VIRAL_CATEGORIES[Math.floor(Math.random() * VIRAL_CATEGORIES.length)];
+          // Get history of previous content to avoid repetition
+          const previousSubjects = getAllCoreSubjects();
 
-          console.log(`🎯 Using NEW Coherent Content Package System for: ${randomNiche.label}`);
-          const contentPackage = await generateCoherentContentPackage(randomNiche.topic, randomNiche.label);
+          let contentPackage;
+          let coreSubject;
+          let attempts = 0;
+          const maxAttempts = 5;
+
+          // Validation loop: Keep generating until we find unique content
+          while (attempts < maxAttempts) {
+            attempts++;
+
+            // Select a fresh category that hasn't been used recently
+            const randomNiche = selectFreshCategory(VIRAL_CATEGORIES, 5);
+
+            // Add unique variation to prevent repetitive prompts
+            const variedTopic = addTopicVariation(randomNiche.topic);
+
+            console.log(`\n🎯 Attempt ${attempts}/${maxAttempts}: Generating content for "${randomNiche.label}"`);
+            console.log(`🎨 Variation: ${variedTopic.substring(0, 100)}...`);
+
+            // Generate content package
+            contentPackage = await generateCoherentContentPackage(variedTopic, randomNiche.label);
+
+            // Extract core subject for similarity checking
+            coreSubject = await extractCoreSubject(
+              contentPackage.visualPrompt,
+              contentPackage.storyArc,
+              randomNiche.label
+            );
+
+            // Check if this content is too similar to previous content
+            const similarityCheck = await checkContentSimilarity(coreSubject, previousSubjects, 0.7);
+
+            if (!similarityCheck.isSimilar) {
+              console.log(`✅ Content approved as unique! Proceeding with generation.`);
+              break; // Content is unique, exit loop
+            } else {
+              console.log(`❌ Content rejected as too similar (score: ${similarityCheck.similarityScore})`);
+              console.log(`   Matched: ${similarityCheck.matchedSubjects.join(', ')}`);
+              console.log(`   Reason: ${similarityCheck.reasoning}`);
+
+              if (attempts < maxAttempts) {
+                console.log(`   🔄 Regenerating with different parameters...\n`);
+              }
+            }
+          }
+
+          if (attempts >= maxAttempts) {
+            console.warn(`⚠️ Max attempts reached. Using last generated content despite similarity.`);
+          }
+
+          // Store core subject and visual prompt for later recording
+          setCurrentCoreSubject(coreSubject);
+          setCurrentVisualPrompt(contentPackage.visualPrompt);
 
           sourceSubject = contentPackage.visualPrompt;
           activeTopicType = TopicType.VIRAL;
@@ -209,13 +276,18 @@ export const useProductionPipeline = (
           }
 
         } else if (item.source === 'NARRATIVE') {
-          sourceSubject = await fetchFactNarrative();
-          activeTopicType = TopicType.NARRATIVE;
+          // Use new Coherent Content Package for NARRATIVE mode too
+          const randomNiche = VIRAL_CATEGORIES[Math.floor(Math.random() * VIRAL_CATEGORIES.length)];
 
-          const visualPrompt = await generateVisualPromptFromTopic(sourceSubject, NarrativeLens.ORIGIN_STORY);
+          console.log(`🎯 NARRATIVE Mode: Generating coherent package for "${randomNiche.label}"`);
+          const contentPackage = await generateCoherentContentPackage(randomNiche.topic, randomNiche.label);
+
+          sourceSubject = contentPackage.visualPrompt;
+          activeTopicType = TopicType.NARRATIVE;
+          categoryLabel = contentPackage.theme.category;
 
           setState(s => ({ ...s, pipelineStep: 'MUSIC' }));
-          const trackData = await findSmartMusic(visualPrompt);
+          const trackData = await findSmartMusicByMood(contentPackage.theme.musicMood, sourceSubject);
           if (trackData && trackData.url) {
             const blobUrl = await fetchAudioBlob(trackData.url);
             if (blobUrl) {
@@ -226,17 +298,28 @@ export const useProductionPipeline = (
 
           setState(s => ({ ...s, pipelineStep: 'SYNTH' }));
           const finalStyle = Object.values(ArtStyle)[Math.floor(Math.random() * 8)];
-          const [art, snippets] = await Promise.all([
-            generateArtImage(finalStyle, visualPrompt),
-            generateDocumentarySnippets(visualPrompt)
-          ]);
+          const art = await generateArtImage(finalStyle, contentPackage.visualPrompt);
 
-          setPreferences(p => ({ ...p, subject: visualPrompt, style: finalStyle, topicType: activeTopicType }));
-          setState(s => ({ ...s, imageUrl: art.imageUrl, docSnippets: snippets, isGenerating: false, pipelineStep: 'METADATA' }));
+          setPreferences(p => ({
+            ...p,
+            subject: sourceSubject,
+            style: finalStyle,
+            topicType: activeTopicType,
+            topicCategory: categoryLabel,
+            narrativeLens: contentPackage.theme.narrativeLens
+          }));
+
+          setState(s => ({
+            ...s,
+            imageUrl: art.imageUrl,
+            storyArc: contentPackage.storyArc,
+            docSnippets: [],
+            isGenerating: false,
+            pipelineStep: 'METADATA'
+          }));
 
           setIsMetadataLoading(true);
-          const meta = await generateYouTubeMetadata(visualPrompt, finalStyle);
-          setMetadata(meta);
+          setMetadata(contentPackage.metadata);
           setIsMetadataLoading(false);
 
           setState(s => ({ ...s, pipelineStep: 'THUMBNAIL' }));
@@ -248,10 +331,14 @@ export const useProductionPipeline = (
           }
         }
       } else {
-        const visualPrompt = await generateVisualPromptFromTopic(sourceSubject);
+        // MANUAL mode - use Coherent Content Package for consistency
+        const randomNiche = VIRAL_CATEGORIES[Math.floor(Math.random() * VIRAL_CATEGORIES.length)];
+
+        console.log(`🎯 MANUAL Mode: Generating coherent package for "${randomNiche.label}"`);
+        const contentPackage = await generateCoherentContentPackage(sourceSubject, randomNiche.label);
 
         setState(s => ({ ...s, pipelineStep: 'MUSIC' }));
-        const trackData = await findSmartMusic(visualPrompt);
+        const trackData = await findSmartMusicByMood(contentPackage.theme.musicMood, sourceSubject);
         if (trackData && trackData.url) {
           const blobUrl = await fetchAudioBlob(trackData.url);
           if (blobUrl) {
@@ -262,17 +349,25 @@ export const useProductionPipeline = (
 
         setState(s => ({ ...s, pipelineStep: 'SYNTH' }));
         const finalStyle = preferences.style;
-        const [art, snippets] = await Promise.all([
-          generateArtImage(finalStyle, visualPrompt),
-          generateDocumentarySnippets(visualPrompt)
-        ]);
+        const art = await generateArtImage(finalStyle, contentPackage.visualPrompt);
 
-        setPreferences(p => ({ ...p, subject: visualPrompt }));
-        setState(s => ({ ...s, imageUrl: art.imageUrl, docSnippets: snippets, isGenerating: false, pipelineStep: 'METADATA' }));
+        setPreferences(p => ({
+          ...p,
+          subject: contentPackage.visualPrompt,
+          narrativeLens: contentPackage.theme.narrativeLens
+        }));
+
+        setState(s => ({
+          ...s,
+          imageUrl: art.imageUrl,
+          storyArc: contentPackage.storyArc,
+          docSnippets: [],
+          isGenerating: false,
+          pipelineStep: 'METADATA'
+        }));
 
         setIsMetadataLoading(true);
-        const meta = await generateYouTubeMetadata(visualPrompt, finalStyle);
-        setMetadata(meta);
+        setMetadata(contentPackage.metadata);
         setIsMetadataLoading(false);
 
         setState(s => ({ ...s, pipelineStep: 'THUMBNAIL' }));

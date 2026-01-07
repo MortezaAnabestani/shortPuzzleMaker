@@ -1,6 +1,6 @@
 import React from "react";
 import { History, Search, FileText, Info, ArrowRight, BookOpen, Sparkles, Wand2 } from "lucide-react";
-import { StorySource } from "../../../types";
+import { StorySource } from "../../types";
 import SectionLabel from "../ui/SectionLabel";
 
 interface StoryNarrativeConfigProps {

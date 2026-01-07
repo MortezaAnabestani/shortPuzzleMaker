@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BookOpen, Quote, Sparkles, Eye, Zap } from "lucide-react";
-import { StoryArc } from "../../../types";
+import { StoryArc } from "../../types";
 
 interface DocumentaryOverlayProps {
   progress: number;

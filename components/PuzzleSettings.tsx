@@ -1,5 +1,5 @@
 import React from "react";
-import { UserPreferences, PieceShape, ArtStyle } from "../../types";
+import { UserPreferences, PieceShape, ArtStyle } from "../types";
 import { LayoutGrid, Shapes, Palette } from "lucide-react";
 
 interface PuzzleSettingsProps {

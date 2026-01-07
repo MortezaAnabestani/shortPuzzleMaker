@@ -99,24 +99,40 @@ export const useProductionPipeline = (
   };
 
   const executePackaging = useCallback(async (videoBlob: Blob) => {
-    if (isExportingRef.current) return;
+    console.log(`📦 [Packaging] executePackaging called`);
+    console.log(`   isExportingRef: ${isExportingRef.current}`);
+    console.log(`   videoBlob size: ${(videoBlob.size / 1024 / 1024).toFixed(2)}MB`);
+
+    if (isExportingRef.current) {
+      console.log(`⏸️ [Packaging] Already exporting, skipping...`);
+      return;
+    }
     isExportingRef.current = true;
 
     const jalali = getJalaliDate();
     const cleanTitle = (metadata?.title || 'Studio_Project').replace(/[\\/:*?"<>|]/g, '').slice(0, 50);
     const baseFileName = `${jalali}_${cleanTitle}`;
 
+    console.log(`📥 [Packaging] Starting downloads with base filename: ${baseFileName}`);
+
     try {
+      console.log(`   1️⃣ Downloading video...`);
       downloadFile(`${baseFileName}_Video.${videoBlob.type.includes('mp4') ? 'mp4' : 'webm'}`, videoBlob);
+
       if (metadata) {
+        console.log(`   2️⃣ Downloading metadata...`);
         await new Promise(r => setTimeout(r, 1500));
         downloadFile(`${baseFileName}_Metadata.txt`, new Blob([`TITLE: ${metadata.title}\n\nDESC: ${metadata.description}`], { type: 'text/plain' }));
       }
+
       if (thumbnailDataUrl) {
+        console.log(`   3️⃣ Downloading thumbnail...`);
         await new Promise(r => setTimeout(r, 1500));
         const res = await fetch(thumbnailDataUrl);
         downloadFile(`${baseFileName}_Thumbnail.jpg`, await res.blob());
       }
+
+      console.log(`✅ [Packaging] All downloads completed!`);
 
       // Record content to history after successful download
       if (currentCoreSubject && currentVisualPrompt) {

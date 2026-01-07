@@ -162,12 +162,13 @@ const App: React.FC = () => {
         <div className="w-full bg-[#050508] border-t border-white/5 pb-32">
           {(state.imageUrl || metadata || isMetadataLoading) && (
             <div className="max-w-7xl mx-auto px-8 py-20 space-y-20">
-              <ThumbnailGenerator 
-                imageUrl={state.imageUrl} 
-                metadata={metadata} 
-                isLoading={isMetadataLoading} 
-                isShortsMode={true} 
-                onThumbnailReady={setThumbnailDataUrl} 
+              <ThumbnailGenerator
+                imageUrl={state.imageUrl}
+                metadata={metadata}
+                isLoading={isMetadataLoading}
+                isShortsMode={true}
+                narrativeLens={preferences.narrativeLens}
+                onThumbnailReady={setThumbnailDataUrl}
               />
               <MetadataStudio metadata={metadata} isLoading={isMetadataLoading} />
             </div>

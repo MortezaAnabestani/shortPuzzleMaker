@@ -2,6 +2,7 @@
 import { Download, Sparkles, Eye, Smartphone, Monitor } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { YouTubeMetadata } from '../services/geminiService';
+import { NarrativeLens } from '../types';
 import Button from './ui/Button';
 
 interface ThumbnailGeneratorProps {
@@ -9,10 +10,25 @@ interface ThumbnailGeneratorProps {
   metadata: YouTubeMetadata | null;
   isLoading: boolean;
   isShortsMode?: boolean;
+  narrativeLens?: NarrativeLens;
   onThumbnailReady?: (url: string) => void;
 }
 
-const ThumbnailGenerator: React.FC<ThumbnailGeneratorProps> = ({ imageUrl, metadata, isLoading, isShortsMode = false, onThumbnailReady }) => {
+// Subtle color palette based on narrative lens
+const getLensColor = (lens?: NarrativeLens): string => {
+  switch (lens) {
+    case NarrativeLens.HIDDEN_DISCOVERY: return '#FFD700'; // Gold - discovery/treasure
+    case NarrativeLens.WHY_MYSTERY: return '#9370DB'; // Purple - curiosity/mystery
+    case NarrativeLens.COMPARISON: return '#20B2AA'; // Teal - balance/comparison
+    case NarrativeLens.UNSOLVED_ENIGMA: return '#FF6B9D'; // Rose - enigma/unknown
+    case NarrativeLens.TRANSFORMATION: return '#00CED1'; // Turquoise - change/evolution
+    case NarrativeLens.COUNTDOWN: return '#FF4500'; // Orange-Red - urgency/countdown
+    case NarrativeLens.ORIGIN_STORY: return '#4169E1'; // Royal Blue - heritage/origin
+    default: return '#ff3333'; // Classic red - default
+  }
+};
+
+const ThumbnailGenerator: React.FC<ThumbnailGeneratorProps> = ({ imageUrl, metadata, isLoading, isShortsMode = false, narrativeLens, onThumbnailReady }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
@@ -57,17 +73,19 @@ const ThumbnailGenerator: React.FC<ThumbnailGeneratorProps> = ({ imageUrl, metad
       ctx.fillStyle = vignette;
       ctx.fillRect(0, 0, width, height);
 
-      // 3. CENTRAL MYSTERY LENS
+      // 3. CENTRAL MYSTERY LENS (with subtle narrative lens coloring)
       const centerX = width / 2;
       const centerY = height * (isShortsMode ? 0.4 : 0.45);
       const radius = isShortsMode ? 380 : 210;
+
+      const lensColor = getLensColor(narrativeLens);
 
       ctx.save();
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius + 15, 0, Math.PI * 2);
       ctx.lineWidth = 18;
-      ctx.strokeStyle = '#ff3333';
-      ctx.shadowColor = '#ff3333';
+      ctx.strokeStyle = lensColor;
+      ctx.shadowColor = lensColor;
       ctx.shadowBlur = 60;
       ctx.globalAlpha = 0.8;
       ctx.stroke();

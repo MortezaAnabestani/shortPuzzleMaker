@@ -111,16 +111,39 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({ isRecording, getCanva
         if (audioEl.readyState < 3) {
           console.log(`⏳ [RecordingSystem] Waiting for audio to load (readyState: ${audioEl.readyState})...`);
 
-          await new Promise<void>((resolve, reject) => {
+          // Try to trigger loading by playing then pausing
+          try {
+            const playPromise = audioEl.play();
+            if (playPromise) {
+              await playPromise.catch(() => {});
+              audioEl.pause();
+              audioEl.currentTime = 0;
+            }
+          } catch (e) {
+            console.warn(`⚠️ Could not pre-play audio:`, e);
+          }
+
+          await new Promise<void>((resolve) => {
             const timeout = setTimeout(() => {
-              reject(new Error('Audio loading timeout after 10s'));
-            }, 10000);
+              console.warn(`⚠️ [RecordingSystem] Audio loading timeout - proceeding anyway`);
+              resolve(); // Don't reject, just proceed
+            }, 5000); // Reduced timeout to 5s
 
             const onCanPlay = () => {
               clearTimeout(timeout);
               audioEl.removeEventListener('canplay', onCanPlay);
               audioEl.removeEventListener('error', onError);
+              audioEl.removeEventListener('loadeddata', onLoadedData);
               console.log(`✅ [RecordingSystem] Audio ready! (readyState: ${audioEl.readyState})`);
+              resolve();
+            };
+
+            const onLoadedData = () => {
+              clearTimeout(timeout);
+              audioEl.removeEventListener('canplay', onCanPlay);
+              audioEl.removeEventListener('error', onError);
+              audioEl.removeEventListener('loadeddata', onLoadedData);
+              console.log(`✅ [RecordingSystem] Audio data loaded! (readyState: ${audioEl.readyState})`);
               resolve();
             };
 
@@ -128,17 +151,19 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({ isRecording, getCanva
               clearTimeout(timeout);
               audioEl.removeEventListener('canplay', onCanPlay);
               audioEl.removeEventListener('error', onError);
+              audioEl.removeEventListener('loadeddata', onLoadedData);
               console.error(`❌ [RecordingSystem] Audio load error:`, e);
-              reject(new Error('Audio load failed'));
+              console.warn(`⚠️ Proceeding with recording despite audio error`);
+              resolve(); // Don't reject - proceed with video-only recording
             };
 
-            if (audioEl.readyState >= 3) {
+            if (audioEl.readyState >= 2) {
               clearTimeout(timeout);
               resolve();
             } else {
               audioEl.addEventListener('canplay', onCanPlay);
+              audioEl.addEventListener('loadeddata', onLoadedData);
               audioEl.addEventListener('error', onError);
-              audioEl.load(); // Force reload
             }
           });
         } else {
@@ -194,6 +219,9 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({ isRecording, getCanva
 
       recorder.onstop = () => {
         const finalBlob = new Blob(chunksRef.current, { type: currentMimeType.current });
+        console.log(`📹 [RecordingSystem] Recording stopped! Blob size: ${(finalBlob.size / 1024 / 1024).toFixed(2)}MB`);
+        console.log(`   Chunks collected: ${chunksRef.current.length}`);
+        console.log(`   Calling onRecordingComplete...`);
         onRecordingComplete(finalBlob);
       };
 

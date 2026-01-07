@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Loader2, Play, Pause, Check, ShieldCheck, Globe, AlertCircle, RefreshCw, Zap, Download, Radio, SkipForward, Server } from 'lucide-react';
-import { findSmartMusic, SmartMusicTrack, SONIC_LIBRARY } from '../../services/geminiService';
+import { findSmartMusicByMood, SmartMusicTrack, SONIC_LIBRARY } from '../../services/geminiService';
 
 /**
  * 🛠 تنظیمات پروکسی اختصاصی Cloudflare

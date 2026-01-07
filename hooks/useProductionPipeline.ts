@@ -159,8 +159,13 @@ export const useProductionPipeline = (
         console.log(`✅ [Packaging] All downloads completed!`);
 
         // Save content to backend database after successful download
+        console.log(`🔍 [Packaging] Checking requirements for database save...`);
+        console.log(`   currentCoreSubject: ${currentCoreSubject ? "✅ EXISTS" : "❌ MISSING"}`);
+        console.log(`   currentVisualPrompt: ${currentVisualPrompt ? "✅ EXISTS" : "❌ MISSING"}`);
+        console.log(`   metadata: ${metadata ? "✅ EXISTS" : "❌ MISSING"}`);
+
         if (currentCoreSubject && currentVisualPrompt && metadata) {
-          console.log(`💾 [API] Saving content to database...`);
+          console.log(`💾 [API] All requirements met! Saving content to database...`);
 
           const payload: ContentPayload = {
             jalaliDate: jalali,
@@ -394,6 +399,17 @@ export const useProductionPipeline = (
             console.log(`🎯 NARRATIVE Mode: Generating coherent package for "${randomNiche.label}"`);
             const contentPackage = await generateCoherentContentPackage(randomNiche.topic, randomNiche.label);
 
+            // Extract core subject for database save
+            const coreSubject = await extractCoreSubject(
+              contentPackage.visualPrompt,
+              contentPackage.storyArc,
+              randomNiche.label
+            );
+
+            // Store for later database save
+            setCurrentCoreSubject(coreSubject);
+            setCurrentVisualPrompt(contentPackage.visualPrompt);
+
             sourceSubject = contentPackage.visualPrompt;
             activeTopicType = TopicType.NARRATIVE;
             categoryLabel = contentPackage.theme.category;
@@ -452,6 +468,17 @@ export const useProductionPipeline = (
 
           console.log(`🎯 MANUAL Mode: Generating coherent package for "${randomNiche.label}"`);
           const contentPackage = await generateCoherentContentPackage(sourceSubject, randomNiche.label);
+
+          // Extract core subject for database save
+          const coreSubject = await extractCoreSubject(
+            contentPackage.visualPrompt,
+            contentPackage.storyArc,
+            randomNiche.label
+          );
+
+          // Store for later database save
+          setCurrentCoreSubject(coreSubject);
+          setCurrentVisualPrompt(contentPackage.visualPrompt);
 
           setState((s) => ({ ...s, pipelineStep: "MUSIC" }));
           const trackData = await findSmartMusicByMood(contentPackage.theme.musicMood, sourceSubject);

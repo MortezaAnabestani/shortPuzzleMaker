@@ -42,6 +42,12 @@ export const generateCoherentStoryArc = async (
     "Uncover the hidden details and little-known facts",
     "Show the scale and magnitude in vivid terms",
     "Connect to modern relevance and current implications",
+    "Highlight the celebrity's iconic moment and influence",
+    "Reveal the behind-the-scenes story and drama",
+    "Show the viral phenomenon and why it spread",
+    "Explore the breaking news angle and immediate impact",
+    "Focus on the fashion/style evolution and trendsetting",
+    "Uncover the controversy and public reaction",
   ];
   const selectedSeed = varietySeeds[Math.floor(Math.random() * varietySeeds.length)];
 
@@ -54,15 +60,23 @@ export const generateCoherentStoryArc = async (
       ${lensInstructions[narrativeLens]}
       Story Angle: ${selectedSeed}
 
+      CONTENT TYPE GUIDELINES:
+      - For Celebrity/Entertainment: Focus on iconic moments, influence, style evolution
+      - For Breaking News: Emphasize immediacy, impact, why it matters now
+      - For Science/History: Use verifiable facts and discovery narratives
+      - For Viral Trends: Explain the phenomenon, cultural impact, why it spread
+      - For Fashion/Beauty: Highlight aesthetic choices, trendsetting, visual impact
+
       CRITICAL REQUIREMENTS:
       1. All 5 parts must tell ONE continuous story about the SAME subject
       2. Each snippet must flow naturally to the next
-      3. Base everything on VERIFIABLE FACTS (cite sources if rare)
+      3. Use ACCURATE INFORMATION (for celebrities/news, cite recent events)
       4. Each text segment under 70 characters
       5. The climax must align with puzzle completion (90% mark)
       6. The reveal must be the satisfying answer/conclusion
       7. Make this story arc UNIQUE by exploring the specific angle mentioned above
       8. Avoid generic statements - use specific details and examples
+      9. For breaking news/celebrity content, capture the excitement and immediacy
 
       Return JSON with:
       {
@@ -138,15 +152,23 @@ export const generateVisualPromptFromTopic = async (
     Visual Style Guide: ${visualGuidance[narrativeLens]}
     Uniqueness Direction: ${selectedUniqueness}
 
-    Requirements:
+    CONTENT-SPECIFIC VISUAL GUIDELINES:
+    - For Celebrity/Fashion: Magazine cover quality, dramatic lighting, red carpet glamour, iconic pose
+    - For Breaking News: Photojournalistic style, capturing the moment, news-worthy composition
+    - For Viral Trends: Social media aesthetic, modern, shareable visual, trendy composition
+    - For Science/History: Documentary quality, educational clarity, authentic detail
+    - For Beauty/Elegance: Sophisticated lighting, refined aesthetics, artistic composition
+
+    General Requirements:
     - Specify exact subject, setting, lighting, atmosphere
     - Include 3-5 specific visual elements that must appear
     - Mention color palette and mood
     - Optimize for 9:16 vertical composition
-    - Make it cinematic and documentary-quality
+    - Make it cinematic and high-quality
     - Ensure the visual directly supports the story being told
     - Make this interpretation UNIQUE and SPECIFIC (avoid generic descriptions)
     - Each generation should explore a different facet of the topic
+    - For people/celebrities: Describe pose, expression, styling details
 
     Return ONLY the detailed prompt, no explanations.`,
   });

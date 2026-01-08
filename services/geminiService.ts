@@ -211,16 +211,51 @@ export const fetchFactNarrative = async (): Promise<string> => {
 };
 
 /**
- * Get trending topics (placeholder for future implementation)
+ * Get trending topics - Breaking News & Viral Content
+ * این تابع محدود به تاریخی یا علمی نیست و هر نوع محتوای ترند و جذاب را پوشش می‌دهد
  */
 export const getTrendingTopics = async (): Promise<string[]> => {
   const ai = getAIInstance();
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents:
-        "List 5 trending mysterious or fascinating topics that would make great puzzle video themes. Return as JSON array.",
+      contents: `List 5 CURRENT trending topics from the last 48 hours that would make viral puzzle video content.
+
+      CONTENT CATEGORIES (Mix and match):
+      - Breaking News & Current Events (global headlines, major announcements)
+      - Celebrity Updates (iconic moments, fashion, relationships, achievements)
+      - Viral Social Media Trends (challenges, memes, cultural phenomena)
+      - Sports Highlights (record-breaking moments, championships, rivalries)
+      - Entertainment Buzz (movies, music releases, award shows, controversies)
+      - Technology Breakthroughs (AI advancements, gadget launches, space missions)
+      - Pop Culture Moments (fashion trends, beauty standards, lifestyle shifts)
+      - Science & Discovery (when it's currently trending and newsworthy)
+      - Historical Parallels (only if directly relevant to current events)
+
+      CRITICAL REQUIREMENTS:
+      1. Focus on CURRENT, TRENDING, and NEWSWORTHY topics
+      2. Mix different categories for variety
+      3. Each topic should be specific and attention-grabbing
+      4. Avoid generic historical facts unless tied to breaking news
+      5. Include both serious news and entertainment/lifestyle content
+      6. Make each topic feel FRESH and TIMELY
+      7. Think like a viral content creator, not a documentary filmmaker
+
+      GOOD EXAMPLES:
+      - "Taylor Swift's record-breaking Eras Tour announcement"
+      - "OpenAI's latest GPT model shocking capabilities"
+      - "Oscars 2024: The most unexpected winner moment"
+      - "Viral TikTok trend: Everyone's doing the [X] challenge"
+      - "Elon Musk's latest Tesla innovation revealed"
+
+      BAD EXAMPLES (avoid these):
+      - "Ancient Egyptian pyramids construction methods" (too old, not trending)
+      - "The mystery of deep ocean creatures" (too generic, not newsworthy)
+      - "How stars are formed in space" (educational but not breaking news)
+
+      Return as JSON array of 5 trending topics.`,
       config: {
+        tools: [{ googleSearch: {} }], // Enable real-time search
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -230,8 +265,20 @@ export const getTrendingTopics = async (): Promise<string[]> => {
       },
     });
     const data = JSON.parse(response.text || "{}");
-    return data.topics || ["Ancient mysteries", "Ocean depths", "Space wonders"];
+    return data.topics || [
+      "Latest AI breakthrough making headlines",
+      "Celebrity fashion moment going viral",
+      "Breaking tech announcement everyone's talking about",
+      "Trending social media challenge of the week",
+      "Major sports record shattered today"
+    ];
   } catch {
-    return ["Ancient mysteries", "Ocean depths", "Space wonders", "Lost civilizations", "Nature phenomena"];
+    return [
+      "Latest AI breakthrough making headlines",
+      "Celebrity fashion moment going viral",
+      "Breaking tech announcement everyone's talking about",
+      "Trending social media challenge of the week",
+      "Major sports record shattered today"
+    ];
   }
 };

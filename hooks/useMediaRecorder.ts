@@ -18,22 +18,31 @@ export const useMediaRecorder = (
     const tracks = [...videoStream.getVideoTracks()];
 
     // 2. Get Audio Stream from Audio Element
-    if (audioRef.current) {
+    if (audioRef.current && audioRef.current.src) {
       try {
-        const audioStream = (audioRef.current as any).captureStream ? 
-                           (audioRef.current as any).captureStream() : 
-                           (audioRef.current as any).mozCaptureStream ? 
+        // Try to capture audio stream from the audio element
+        const audioStream = (audioRef.current as any).captureStream ?
+                           (audioRef.current as any).captureStream() :
+                           (audioRef.current as any).mozCaptureStream ?
                            (audioRef.current as any).mozCaptureStream() : null;
-        
+
         if (audioStream) {
           const audioTracks = audioStream.getAudioTracks();
           if (audioTracks.length > 0) {
             tracks.push(audioTracks[0]);
+            console.log("✅ [Recording] Audio track captured successfully");
+          } else {
+            console.warn("⚠️ [Recording] No audio tracks found in captured stream");
           }
+        } else {
+          console.warn("⚠️ [Recording] captureStream not supported, audio will not be recorded");
         }
       } catch (e) {
-        console.warn("Could not capture audio stream for recording (likely CORS related).", e);
+        console.error("❌ [Recording] Could not capture audio stream:", e);
+        console.warn("⚠️ [Recording] This is likely due to CORS. Audio will not be included in recording.");
       }
+    } else {
+      console.warn("⚠️ [Recording] No audio source available or audio element not loaded");
     }
 
     // 3. Create Combined Stream

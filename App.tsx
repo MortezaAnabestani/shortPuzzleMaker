@@ -18,8 +18,9 @@ import AudioStatus from "./components/layout/AudioStatus";
 import RecordingSystem from "./components/RecordingSystem";
 import { MusicTrack } from "./components/sidebar/MusicUploader";
 import { playWithFade, pauseWithFade } from "./utils/audioFade";
+import { BackendModeProvider } from "./contexts/BackendModeContext";
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const [preferences, setPreferences] = useState<UserPreferences>({
     style: ArtStyle.HYPER_REALISTIC,
     subject: "Ancient Mystery Revealed",
@@ -214,6 +215,14 @@ const App: React.FC = () => {
         />
       </main>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <BackendModeProvider>
+      <AppContent />
+    </BackendModeProvider>
   );
 };
 

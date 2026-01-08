@@ -1,5 +1,7 @@
 import React from 'react';
-import { Radio, ShieldAlert, Activity, Database } from 'lucide-react';
+import { Radio, ShieldAlert, Activity, Database, Wifi, WifiOff, FileJson, Globe } from 'lucide-react';
+import { useBackendMode } from '../contexts/BackendModeContext';
+import { BackendMode } from '../types';
 
 interface HeaderProps {
   progress: number;
@@ -10,6 +12,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ progress, isColoring, isRecording, error, hasImage }) => {
+  const { mode, isConnected, setMode, checkConnection } = useBackendMode();
+
   return (
     <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-50">
       {/* Left: Brand Identity & System Info */}
@@ -31,6 +35,44 @@ const Header: React.FC<HeaderProps> = ({ progress, isColoring, isRecording, erro
 
       {/* Right: Status Indicators & Metrics */}
       <div className="flex items-center gap-3">
+        {/* Backend Mode Switcher */}
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md">
+          <button
+            onClick={() => checkConnection()}
+            className="hover:opacity-70 transition-opacity"
+            title="بررسی اتصال"
+          >
+            {isConnected ? (
+              <Wifi className="w-3.5 h-3.5 text-emerald-600" />
+            ) : (
+              <WifiOff className="w-3.5 h-3.5 text-slate-400" />
+            )}
+          </button>
+          <div className="w-px h-4 bg-slate-300"></div>
+          <button
+            onClick={() => setMode(BackendMode.JSON)}
+            className={`px-2 py-1 rounded text-[10px] font-mono font-bold uppercase transition-all ${
+              mode === BackendMode.JSON
+                ? 'bg-amber-500 text-white'
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+            title="JSON Mode: فقط ذخیره و بررسی تشابه"
+          >
+            <FileJson className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => setMode(BackendMode.ALL)}
+            className={`px-2 py-1 rounded text-[10px] font-mono font-bold uppercase transition-all ${
+              mode === BackendMode.ALL
+                ? 'bg-[#007acc] text-white'
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+            title="All Mode: همه فراخوانی‌ها از بک‌اند"
+          >
+            <Globe className="w-3 h-3" />
+          </button>
+        </div>
+
         {error && (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-md">
             <ShieldAlert className="w-3.5 h-3.5 text-red-600" />

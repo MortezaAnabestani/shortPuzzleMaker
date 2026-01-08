@@ -1,7 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Volume2, Upload, X, CheckCircle2, FileAudio, Waves, Zap, BoxSelect, Download } from "lucide-react";
+import { Volume2, Upload, X, CheckCircle2, FileAudio, Waves, Zap, BoxSelect, Download, RefreshCw, List } from "lucide-react";
 import { sonicEngine, SoundType } from "../../services/proceduralAudio";
 import { assetApi } from "../../services/api/assetApi";
+import { soundRandomizer, SoundVariant } from "../../services/soundRandomizer";
 
 interface SoundSlot {
   type: SoundType;
@@ -16,9 +17,17 @@ const SOUND_SLOTS: SoundSlot[] = [
   { type: "DESTRUCT", label: "صدای انفجار/تخریب", icon: <X className="w-3.5 h-3.5" /> },
 ];
 
-const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
+
+interface SnapSoundUploaderProps {
+  disabled?: boolean;
+  onRandomizeRequest?: () => void;
+}
+
+const SnapSoundUploader: React.FC<SnapSoundUploaderProps> = ({ disabled, onRandomizeRequest }) => {
   const [loadedSounds, setLoadedSounds] = useState<Set<SoundType>>(new Set());
   const [loadingFromBackend, setLoadingFromBackend] = useState(false);
+  const [manualSounds, setManualSounds] = useState<Map<SoundType, SoundVariant[]>>(new Map());
+  const [showManualList, setShowManualList] = useState(false);
   const fileInputs = useRef<Map<SoundType, HTMLInputElement>>(new Map());
 
   // Mapping بین SoundType و backend sound types
@@ -81,14 +90,41 @@ const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
   }, []);
 
   const handleFileChange = async (type: SoundType, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        await sonicEngine.setSound(type, file);
-        setLoadedSounds((prev) => new Set(prev).add(type));
-      } catch (err) {
-        alert("خطا در بارگذاری فایل.");
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      // اگر چند فایل انتخاب شده، همه را به لیست دستی اضافه کن
+      const newSounds: SoundVariant[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        newSounds.push({
+          id: Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          file: file,
+        });
       }
+
+      setManualSounds((prev) => {
+        const newMap = new Map(prev);
+        const existing = newMap.get(type) || [];
+        const updated = [...existing, ...newSounds];
+        newMap.set(type, updated);
+
+        // به‌روزرسانی soundRandomizer
+        soundRandomizer.setManualVariants(type, updated);
+
+        return newMap;
+      });
+
+      // اولین فایل را بارگذاری کن
+      await sonicEngine.setSound(type, newSounds[0].file);
+      setLoadedSounds((prev) => new Set(prev).add(type));
+
+      console.log(`✅ [SoundUpload] Added ${newSounds.length} sound(s) for ${type}`);
+    } catch (err) {
+      alert("خطا در بارگذاری فایل.");
+      console.error("❌ [SoundUpload] Failed:", err);
     }
   };
 
@@ -104,6 +140,27 @@ const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
     }
   };
 
+  const handleReRandomize = async (type: SoundType) => {
+    const success = await soundRandomizer.randomizeSound(type, true);
+    if (success) {
+      setLoadedSounds((prev) => new Set(prev).add(type));
+    }
+  };
+
+  const handleRemoveManualSound = (type: SoundType, soundId: string) => {
+    setManualSounds((prev) => {
+      const newMap = new Map(prev);
+      const existing = newMap.get(type) || [];
+      const updated = existing.filter(s => s.id !== soundId);
+      newMap.set(type, updated);
+
+      // به‌روزرسانی soundRandomizer
+      soundRandomizer.setManualVariants(type, updated);
+
+      return newMap;
+    });
+  };
+
   return (
     <div className="w-full flex flex-col gap-4">
       <div className="flex items-center justify-between px-1">
@@ -111,12 +168,21 @@ const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
           <Volume2 className="w-4 h-4 text-blue-500" />
           <span className="text-[10px] font-black uppercase tracking-widest">Audio Profile Studio</span>
         </div>
-        {loadingFromBackend && (
-          <div className="flex items-center gap-1.5 text-[9px] text-blue-400">
-            <Download className="w-3 h-3 animate-bounce" />
-            <span>Loading...</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowManualList(!showManualList)}
+            className="p-1.5 bg-white/5 hover:bg-blue-600/20 rounded-md text-zinc-500 hover:text-blue-400 transition-all"
+            title="مشاهده لیست افکت‌های دستی"
+          >
+            <List className="w-3.5 h-3.5" />
+          </button>
+          {loadingFromBackend && (
+            <div className="flex items-center gap-1.5 text-[9px] text-blue-400">
+              <Download className="w-3 h-3 animate-bounce" />
+              <span>Loading...</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-2">
@@ -129,7 +195,7 @@ const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
             >
               <input
                 type="file"
-                // Fix: ref callback must return void. Map.set returns the Map, causing a TS error.
+                multiple
                 ref={(el) => {
                   if (el) fileInputs.current.set(slot.type, el);
                 }}
@@ -149,7 +215,7 @@ const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
                 <div className="flex flex-col min-w-0">
                   <span className="text-[10px] font-bold text-zinc-300 tracking-wide">{slot.label}</span>
                   <span className="text-[8px] font-mono text-zinc-600 uppercase">
-                    {isLoaded ? "Buffered_Ready" : "Waiting_Input"}
+                    {isLoaded ? `Ready (${(manualSounds.get(slot.type)?.length || 0) > 0 ? `${manualSounds.get(slot.type)?.length} variants` : 'DB'})` : "Waiting_Input"}
                   </span>
                 </div>
               </div>
@@ -160,6 +226,7 @@ const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
                     disabled={disabled}
                     onClick={() => fileInputs.current.get(slot.type)?.click()}
                     className="p-2 bg-white/5 hover:bg-blue-600/20 rounded-lg text-zinc-500 hover:text-blue-400 transition-all"
+                    title="بارگذاری فایل"
                   >
                     <Upload className="w-3.5 h-3.5" />
                   </button>
@@ -167,8 +234,24 @@ const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
                   <>
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse" />
                     <button
+                      onClick={() => handleReRandomize(slot.type)}
+                      className="p-2 bg-white/5 hover:bg-purple-600/20 rounded-lg text-zinc-500 hover:text-purple-400 transition-all"
+                      title="انتخاب تصادفی مجدد"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      disabled={disabled}
+                      onClick={() => fileInputs.current.get(slot.type)?.click()}
+                      className="p-2 bg-white/5 hover:bg-blue-600/20 rounded-lg text-zinc-500 hover:text-blue-400 transition-all"
+                      title="اضافه کردن فایل بیشتر"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                    </button>
+                    <button
                       onClick={() => handleClear(slot.type)}
                       className="p-2 hover:bg-red-500/10 text-zinc-600 hover:text-red-500 transition-colors"
+                      title="پاک کردن"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -179,6 +262,50 @@ const SnapSoundUploader: React.FC<{ disabled?: boolean }> = ({ disabled }) => {
           );
         })}
       </div>
+
+      {/* Manual Sound List */}
+      {showManualList && (
+        <div className="w-full bg-zinc-900/60 border border-white/10 rounded-xl p-3 space-y-2">
+          <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+            لیست افکت‌های دستی
+          </div>
+          {SOUND_SLOTS.map((slot) => {
+            const sounds = manualSounds.get(slot.type) || [];
+            if (sounds.length === 0) return null;
+
+            return (
+              <div key={slot.type} className="space-y-1">
+                <div className="flex items-center gap-2 text-[9px] text-zinc-500 uppercase">
+                  {slot.icon}
+                  <span>{slot.label}</span>
+                </div>
+                {sounds.map((sound) => (
+                  <div
+                    key={sound.id}
+                    className="flex items-center justify-between bg-zinc-800/40 border border-white/5 p-2 rounded-lg"
+                  >
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <FileAudio className="w-3 h-3 text-zinc-500 flex-shrink-0" />
+                      <span className="text-[10px] text-zinc-400 truncate">{sound.name}</span>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveManualSound(slot.type, sound.id)}
+                      className="p-1 hover:bg-red-500/10 text-zinc-600 hover:text-red-500 transition-colors rounded"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+          {Array.from(manualSounds.values()).every(arr => arr.length === 0) && (
+            <div className="text-center text-[10px] text-zinc-600 py-4">
+              هیچ افکت دستی بارگذاری نشده است
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

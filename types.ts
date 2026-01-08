@@ -88,6 +88,11 @@ export interface ContentTheme {
   musicMood: MusicMood;
 }
 
+export enum BackendMode {
+  JSON = 'json',
+  ALL = 'all'
+}
+
 export interface PuzzleState {
   isGenerating: boolean;
   isSolving: boolean;

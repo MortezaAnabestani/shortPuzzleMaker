@@ -52,6 +52,14 @@ class ProceduralAudioEngine {
     this.buffers.delete(type);
   }
 
+  public hasSound(type: SoundType): boolean {
+    return this.buffers.has(type);
+  }
+
+  public getAllLoadedSounds(): SoundType[] {
+    return Array.from(this.buffers.keys());
+  }
+
   /**
    * تولید یک صدای تق (Snap) سنتز شده در صورتی که فایلی موجود نباشد
    */

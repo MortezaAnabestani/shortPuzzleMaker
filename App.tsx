@@ -55,10 +55,8 @@ const AppContent: React.FC = () => {
     };
     setMusicTracks((prev) => [...prev, newTrack]);
     setSelectedTrackId(newTrack.id);
-    if (audioRef.current) {
-      audioRef.current.src = url;
-      audioRef.current.load();
-    }
+    // Note: Audio is already loaded in selectSmartMusic, don't reload here to prevent conflicts
+    console.log(`📝 [App] Cloud track added to list: ${title} (${source})`);
   }, []);
 
   const {

@@ -94,9 +94,14 @@ const selectSmartMusic = async (params: SmartMusicSelectionParams): Promise<{ so
 
     // Load music to audioRef
     if (audioRef.current) {
+      console.log(`   🔊 Loading manual track to audio player...`);
+      console.log(`      Track URL: ${selectedTrack.url.substring(0, 80)}...`);
       audioRef.current.src = selectedTrack.url;
       audioRef.current.load();
-      console.log(`   🔊 Music loaded to audio player`);
+      console.log(`      Audio element readyState: ${audioRef.current.readyState}`);
+      console.log(`   ✅ Music loaded to audio player`);
+    } else {
+      console.error(`   ❌ audioRef.current is null!`);
     }
 
     setActiveTrackName(selectedTrack.name);
@@ -118,9 +123,15 @@ const selectSmartMusic = async (params: SmartMusicSelectionParams): Promise<{ so
 
       // Load music to audioRef
       if (audioRef.current) {
+        console.log(`   🔊 Loading cloud track to audio player...`);
+        console.log(`      Blob URL: ${blobUrl.substring(0, 80)}...`);
+        console.log(`      Track source: ${trackData.source}`);
         audioRef.current.src = blobUrl;
         audioRef.current.load();
-        console.log(`   🔊 Music loaded to audio player`);
+        console.log(`      Audio element readyState: ${audioRef.current.readyState}`);
+        console.log(`   ✅ Music loaded to audio player`);
+      } else {
+        console.error(`   ❌ audioRef.current is null!`);
       }
 
       console.log(`🎵 [MUSIC] Source: ${trackData.source}, Track: ${trackData.title}`);
@@ -247,13 +258,21 @@ export const useProductionPipeline = (
       try {
         const res = await fetch(p.url);
         if (res.ok) {
-          const blob = await res.blob();
-          return URL.createObjectURL(blob);
+          let blob = await res.blob();
+          // Ensure blob has correct MIME type
+          if (!blob.type || blob.type === 'application/octet-stream') {
+            blob = new Blob([blob], { type: 'audio/mpeg' });
+            console.log(`🎵 [fetchAudioBlob] Fixed blob MIME type to audio/mpeg`);
+          }
+          const blobUrl = URL.createObjectURL(blob);
+          console.log(`✅ [fetchAudioBlob] Created blob URL: ${blobUrl.substring(0, 50)}...`);
+          return blobUrl;
         }
       } catch (e) {
         console.warn("Proxy fail:", p.url);
       }
     }
+    console.error(`❌ [fetchAudioBlob] All proxies failed for: ${url}`);
     return null;
   };
 

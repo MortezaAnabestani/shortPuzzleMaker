@@ -12,6 +12,8 @@ import { useProductionPipeline } from "./hooks/useProductionPipeline";
 import { CanvasHandle } from "./components/AutoColorCanvas";
 import Sidebar from "./components/Sidebar";
 import CanvasArea from "./components/CanvasArea";
+import Header from "./components/Header";
+import ProductionProgress from "./components/ProductionProgress";
 import MetadataStudio from "./components/engagement/MetadataStudio";
 import ThumbnailGenerator from "./components/ThumbnailGenerator";
 import AudioStatus from "./components/layout/AudioStatus";
@@ -116,6 +118,15 @@ const AppContent: React.FC = () => {
     <div className="flex h-screen bg-[#020205] text-slate-100 overflow-hidden font-['Inter'] relative">
       <audio ref={audioRef} loop crossOrigin="anonymous" style={{ display: "none" }} />
 
+      {/* Production Progress Indicator */}
+      {state.isAutoMode && state.productionSteps && state.productionSteps.length > 0 && (
+        <ProductionProgress
+          currentVideo={state.currentQueueIdx + 1}
+          totalVideos={state.queue.length}
+          steps={state.productionSteps}
+        />
+      )}
+
       <RecordingSystem
         isRecording={state.isRecording}
         getCanvas={() => canvasHandleRef.current?.getCanvas() || null}
@@ -169,6 +180,14 @@ const AppContent: React.FC = () => {
       </aside>
 
       <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#020205] relative z-10 flex flex-col">
+        <Header
+          progress={state.progress}
+          isColoring={state.isSolving}
+          isRecording={state.isRecording}
+          error={state.error}
+          hasImage={!!state.imageUrl}
+        />
+
         <section className="h-[85vh] w-full relative bg-black shrink-0">
           <CanvasArea
             canvasHandleRef={canvasHandleRef}

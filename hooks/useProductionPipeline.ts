@@ -78,7 +78,7 @@ interface SmartMusicSelectionParams {
   musicMood: any;
   topic: string;
   fetchAudioBlob: (url: string) => Promise<string | null>;
-  onAddCloudTrack: (url: string, title: string) => void;
+  onAddCloudTrack: (url: string, title: string, source?: 'backend' | 'ai') => void;
   setActiveTrackName: (name: string | null) => void;
   audioRef: React.RefObject<HTMLAudioElement | null>;
 }
@@ -86,10 +86,11 @@ interface SmartMusicSelectionParams {
 const selectSmartMusic = async (params: SmartMusicSelectionParams): Promise<{ source: string; title: string } | null> => {
   const { musicTracks, queueIndex, musicMood, topic, fetchAudioBlob, onAddCloudTrack, setActiveTrackName, audioRef } = params;
 
-  // Priority 1: Manual tracks
-  if (musicTracks.length > 0) {
-    const selectedTrack = musicTracks[queueIndex % musicTracks.length];
-    console.log(`🎵 [MUSIC] Source: Manual (${queueIndex % musicTracks.length + 1}/${musicTracks.length}), Track: ${selectedTrack.name}`);
+  // Priority 1: Manual tracks only (filter out backend/ai tracks)
+  const manualTracks = musicTracks.filter(track => track.source === 'manual');
+  if (manualTracks.length > 0) {
+    const selectedTrack = manualTracks[queueIndex % manualTracks.length];
+    console.log(`🎵 [MUSIC] Source: Manual (${queueIndex % manualTracks.length + 1}/${manualTracks.length}), Track: ${selectedTrack.name}`);
 
     // Load music to audioRef
     if (audioRef.current) {
@@ -110,7 +111,9 @@ const selectSmartMusic = async (params: SmartMusicSelectionParams): Promise<{ so
   if (trackData && trackData.url) {
     const blobUrl = await fetchAudioBlob(trackData.url);
     if (blobUrl) {
-      onAddCloudTrack(blobUrl, trackData.title);
+      // Determine source type for musicTracks
+      const sourceType = trackData.source === 'Backend Database' ? 'backend' : 'ai';
+      onAddCloudTrack(blobUrl, trackData.title, sourceType);
       setActiveTrackName(trackData.title);
 
       // Load music to audioRef
@@ -135,7 +138,7 @@ export const useProductionPipeline = (
   musicTracks: MusicTrack[],
   selectedTrackId: string | null,
   setActiveTrackName: (name: string | null) => void,
-  onAddCloudTrack: (url: string, title: string) => void,
+  onAddCloudTrack: (url: string, title: string, source?: 'backend' | 'ai') => void,
   audioRef: React.RefObject<HTMLAudioElement | null>
 ) => {
   const [state, setState] = useState<
@@ -174,6 +177,9 @@ export const useProductionPipeline = (
   const [lastVideoBlob, setLastVideoBlob] = useState<Blob | null>(null);
   const [currentCoreSubject, setCurrentCoreSubject] = useState<string | null>(null);
   const [currentVisualPrompt, setCurrentVisualPrompt] = useState<string | null>(null);
+  const [currentMusicInfo, setCurrentMusicInfo] = useState<{ source: string; title: string } | null>(null);
+  const [currentSource, setCurrentSource] = useState<'VIRAL' | 'BREAKING' | 'NARRATIVE' | 'MANUAL'>('MANUAL');
+  const [currentSimilarityScore, setCurrentSimilarityScore] = useState<number | undefined>(undefined);
   const isExportingRef = useRef(false);
 
   // Helper function to update production steps
@@ -305,14 +311,24 @@ export const useProductionPipeline = (
           const payload: ContentPayload = {
             jalaliDate: jalali,
             puzzleCard: {
+              source: currentSource,
               category: preferences.topicCategory || "Unknown",
               narrativeLens: preferences.narrativeLens,
+              musicMood: state.storyArc?.musicMood,
+              musicTrack: currentMusicInfo?.title,
+              musicSource: currentMusicInfo?.source,
               artStyle: preferences.style,
               pieceCount: preferences.pieceCount,
               duration: preferences.durationMinutes,
               shape: preferences.shape,
               material: preferences.material,
               movement: preferences.movement,
+              soundEffects: {
+                snap: 'randomized',
+                move: 'randomized',
+                wave: 'randomized',
+                destruct: 'randomized'
+              }
             },
             story: {
               coreSubject: currentCoreSubject,
@@ -334,7 +350,8 @@ export const useProductionPipeline = (
               videoSizeMB: Number((videoBlob.size / 1024 / 1024).toFixed(2)),
             },
             analysis: {
-              isUnique: true, // Passed validation
+              similarityScore: currentSimilarityScore,
+              isUnique: currentSimilarityScore !== undefined ? currentSimilarityScore < 0.85 : true,
               generationAttempts: 1,
             },
           };
@@ -355,6 +372,9 @@ export const useProductionPipeline = (
           // Clear after recording
           setCurrentCoreSubject(null);
           setCurrentVisualPrompt(null);
+          setCurrentMusicInfo(null);
+          setCurrentSource('MANUAL');
+          setCurrentSimilarityScore(undefined);
         } else {
           console.log(`⏭️ [API] Skipping database save (missing required data)`);
           updateProductionStep('📦 PACKAGE', 'completed', 'دانلود انجام شد - بدون ذخیره دیتابیس');
@@ -487,13 +507,16 @@ export const useProductionPipeline = (
 
               if (similarityResult.success && similarityResult.data) {
                 const isSimilar = similarityResult.data.isSimilar;
-                const score = similarityResult.data.similarityScore;
+                const score = similarityResult.data.similarityScore !== undefined
+                  ? similarityResult.data.similarityScore
+                  : 0;
 
                 if (!isSimilar) {
                   console.log(`✅ Content approved as unique! Proceeding with generation.`);
                   console.log(`🔍 [VALIDATION] Similarity Score: ${score} (UNIQUE)`);
-                  const scoreText = score !== undefined ? score.toFixed(2) : 'N/A';
+                  const scoreText = score.toFixed(2);
                   updateProductionStep('🔍 VALIDATION', 'completed', `امتیاز: ${scoreText} - محتوای منحصربه‌فرد`);
+                  setCurrentSimilarityScore(score);
                   break; // Content is unique, exit loop
                 } else {
                   console.log(`❌ Content rejected as too similar (score: ${score})`);
@@ -504,7 +527,7 @@ export const useProductionPipeline = (
 
                   if (attempts < maxAttempts) {
                     console.log(`   🔄 Regenerating with different parameters...\n`);
-                    const scoreText = score !== undefined ? score.toFixed(2) : 'N/A';
+                    const scoreText = score.toFixed(2);
                     updateProductionStep('🔍 VALIDATION', 'in_progress', `امتیاز: ${scoreText} - تلاش ${attempts}/${maxAttempts}`);
                   }
                 }
@@ -525,6 +548,7 @@ export const useProductionPipeline = (
             // Store core subject and visual prompt for later recording
             setCurrentCoreSubject(coreSubject);
             setCurrentVisualPrompt(contentPackage.visualPrompt);
+            setCurrentSource('VIRAL');
 
             sourceSubject = contentPackage.visualPrompt;
             activeTopicType = TopicType.VIRAL;
@@ -553,8 +577,10 @@ export const useProductionPipeline = (
               console.log(`🎵 [MUSIC] Selected: ${musicResult.title} from ${musicResult.source}`);
               const titlePreview = musicResult.title.length > 40 ? musicResult.title.substring(0, 40) + '...' : musicResult.title;
               updateProductionStep('🎵 MUSIC', 'completed', `منبع: ${musicResult.source}, قطعه: ${titlePreview}`);
+              setCurrentMusicInfo(musicResult);
             } else {
               updateProductionStep('🎵 MUSIC', 'completed', 'موسیقی انتخاب نشد - ادامه بدون موسیقی');
+              setCurrentMusicInfo(null);
             }
 
             // Step 5: GENERATE - Create Visual Content
@@ -636,6 +662,7 @@ export const useProductionPipeline = (
             // Store for later database save
             setCurrentCoreSubject(coreSubject);
             setCurrentVisualPrompt(contentPackage.visualPrompt);
+            setCurrentSource('NARRATIVE');
 
             sourceSubject = contentPackage.visualPrompt;
             activeTopicType = TopicType.NARRATIVE;
@@ -643,6 +670,7 @@ export const useProductionPipeline = (
 
             // NARRATIVE skips VALIDATION step (no similarity check needed for historical content)
             updateProductionStep('🔍 VALIDATION', 'completed', 'بدون نیاز به اعتبارسنجی - محتوای تاریخی');
+            setCurrentSimilarityScore(undefined);
 
             // Step 3: VARIETY - Randomize Visual Parameters
             updateProductionStep('🎭 VARIETY', 'in_progress');
@@ -667,8 +695,10 @@ export const useProductionPipeline = (
               console.log(`🎵 [MUSIC] Selected: ${narrativeMusicResult.title} from ${narrativeMusicResult.source}`);
               const musicTitlePreview = narrativeMusicResult.title.length > 40 ? narrativeMusicResult.title.substring(0, 40) + '...' : narrativeMusicResult.title;
               updateProductionStep('🎵 MUSIC', 'completed', `منبع: ${narrativeMusicResult.source}, قطعه: ${musicTitlePreview}`);
+              setCurrentMusicInfo(narrativeMusicResult);
             } else {
               updateProductionStep('🎵 MUSIC', 'completed', 'موسیقی انتخاب نشد - ادامه بدون موسیقی');
+              setCurrentMusicInfo(null);
             }
 
             // Step 5: GENERATE - Create Visual Content
@@ -774,19 +804,22 @@ export const useProductionPipeline = (
 
               if (similarityResult.success && similarityResult.data) {
                 const isSimilar = similarityResult.data.isSimilar;
-                const score = similarityResult.data.similarityScore;
+                const score = similarityResult.data.similarityScore !== undefined
+                  ? similarityResult.data.similarityScore
+                  : 0;
 
                 if (!isSimilar) {
                   console.log(`✅ Content approved as unique! Proceeding with generation.`);
                   console.log(`🔍 [VALIDATION] Similarity Score: ${score} (UNIQUE)`);
-                  const scoreText = score !== undefined ? score.toFixed(2) : 'N/A';
+                  const scoreText = score.toFixed(2);
                   updateProductionStep('🔍 VALIDATION', 'completed', `امتیاز: ${scoreText} - خبر منحصربه‌فرد`);
+                  setCurrentSimilarityScore(score);
                   break;
                 } else {
                   console.log(`❌ Content rejected as too similar (score: ${score})`);
                   if (attempts < maxAttempts) {
                     console.log(`   🔄 Regenerating with different topic...\n`);
-                    const scoreText = score !== undefined ? score.toFixed(2) : 'N/A';
+                    const scoreText = score.toFixed(2);
                     updateProductionStep('🔍 VALIDATION', 'in_progress', `امتیاز: ${scoreText} - تلاش ${attempts}/${maxAttempts}`);
                   }
                 }
@@ -806,6 +839,7 @@ export const useProductionPipeline = (
             // Store core subject and visual prompt
             setCurrentCoreSubject(coreSubject);
             setCurrentVisualPrompt(contentPackage.visualPrompt);
+            setCurrentSource('BREAKING');
 
             sourceSubject = contentPackage.visualPrompt;
             activeTopicType = TopicType.BREAKING;
@@ -834,8 +868,10 @@ export const useProductionPipeline = (
               console.log(`🎵 [MUSIC] Selected: ${breakingMusicResult.title} from ${breakingMusicResult.source}`);
               const breakingMusicTitlePreview = breakingMusicResult.title.length > 40 ? breakingMusicResult.title.substring(0, 40) + '...' : breakingMusicResult.title;
               updateProductionStep('🎵 MUSIC', 'completed', `منبع: ${breakingMusicResult.source}, قطعه: ${breakingMusicTitlePreview}`);
+              setCurrentMusicInfo(breakingMusicResult);
             } else {
               updateProductionStep('🎵 MUSIC', 'completed', 'موسیقی انتخاب نشد - ادامه بدون موسیقی');
+              setCurrentMusicInfo(null);
             }
 
             // Step 5: GENERATE - Create Visual Content
@@ -918,10 +954,12 @@ export const useProductionPipeline = (
           // Store for later database save
           setCurrentCoreSubject(coreSubject);
           setCurrentVisualPrompt(contentPackage.visualPrompt);
+          setCurrentSource('MANUAL');
+          setCurrentSimilarityScore(undefined);
 
           setState((s) => ({ ...s, pipelineStep: "MUSIC" }));
           // 🎵 Smart Music Selection with Priority (Manual Mode doesn't use queue)
-          await selectSmartMusic({
+          const manualMusicResult = await selectSmartMusic({
             musicTracks,
             queueIndex: 0, // Manual mode doesn't track queue index
             musicMood: contentPackage.theme.musicMood,
@@ -931,6 +969,7 @@ export const useProductionPipeline = (
             setActiveTrackName,
             audioRef,
           });
+          setCurrentMusicInfo(manualMusicResult);
 
           setState((s) => ({ ...s, pipelineStep: "SYNTH" }));
           const finalStyle = preferences.style;

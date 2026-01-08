@@ -8,6 +8,7 @@ export interface MusicTrack {
   name: string;
   url: string;
   file?: File;
+  source?: 'manual' | 'backend' | 'ai'; // منبع موسیقی
 }
 
 interface MusicUploaderProps {

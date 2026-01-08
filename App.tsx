@@ -46,11 +46,12 @@ const AppContent: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasHandleRef = useRef<CanvasHandle>(null);
 
-  const handleAddCloudTrack = useCallback((url: string, title: string) => {
+  const handleAddCloudTrack = useCallback((url: string, title: string, source: 'backend' | 'ai' = 'backend') => {
     const newTrack: MusicTrack = {
       id: Math.random().toString(36).substr(2, 9),
       name: title,
       url: url,
+      source: source,
     };
     setMusicTracks((prev) => [...prev, newTrack]);
     setSelectedTrackId(newTrack.id);
@@ -164,6 +165,7 @@ const AppContent: React.FC = () => {
               id: Math.random().toString(36).substr(2, 9),
               name: f.name,
               url: URL.createObjectURL(f),
+              source: 'manual' as const,
             }));
             setMusicTracks((prev) => [...prev, ...newTracks]);
             if (newTracks.length === 1) setSelectedTrackId(newTracks[0].id);

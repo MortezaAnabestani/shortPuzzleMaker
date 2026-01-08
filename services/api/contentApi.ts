@@ -15,16 +15,24 @@ interface ApiResponse<T> {
 export interface ContentPayload {
   jalaliDate: string;
   puzzleCard: {
+    source?: 'VIRAL' | 'BREAKING' | 'NARRATIVE' | 'MANUAL';
     category: string;
     narrativeLens?: string;
     musicMood?: string;
     musicTrack?: string;
+    musicSource?: string; // Manual/Backend/AI
     artStyle?: string;
     movement?: string;
     pieceCount?: number;
     duration?: number;
     shape?: string;
     material?: string;
+    soundEffects?: {
+      snap?: string;
+      move?: string;
+      wave?: string;
+      destruct?: string;
+    };
   };
   story: {
     coreSubject: string;

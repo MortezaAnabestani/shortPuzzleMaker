@@ -34,9 +34,26 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
     if (!ctx) return null;
 
     try {
+      // CRITICAL FIX: Check if audio element has a valid source before creating source node
+      if (!audioEl.src && !audioEl.currentSrc) {
+        console.warn(`⚠️ [AudioGraph] No audio source available, skipping audio graph setup`);
+        // Return empty audio stream instead of null to avoid breaking the recorder
+        const emptyDest = ctx.createMediaStreamDestination();
+        return emptyDest.stream;
+      }
+
       // ایجاد سورس صوتی (فقط یکبار برای هر المنت در طول چرخه حیات)
       if (!sourceNodeRef.current) {
-        sourceNodeRef.current = ctx.createMediaElementSource(audioEl);
+        console.log(`🔊 [AudioGraph] Creating MediaElementAudioSourceNode...`);
+        try {
+          sourceNodeRef.current = ctx.createMediaElementSource(audioEl);
+          console.log(`✅ [AudioGraph] Source node created successfully`);
+        } catch (e) {
+          console.error(`❌ [AudioGraph] Failed to create source node:`, e);
+          // If we can't create source node, return empty stream
+          const emptyDest = ctx.createMediaStreamDestination();
+          return emptyDest.stream;
+        }
       }
 
       // ایجاد مقصد استریم برای ضبط
@@ -65,6 +82,8 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
       musicGain.connect(ctx.destination); // برای شنیدن صدا از اسپیکر
       musicGain.connect(dest); // برای ارسال به ریکوردر
 
+      console.log(`🎵 [AudioGraph] Audio routing complete: audio → gain → [speakers + recorder]`);
+
       // اتصال افکت‌های صوتی سیستم (SFX) به ضبط
       const sfxGain = sonicEngine.getMasterGain();
       if (sfxGain) {
@@ -72,6 +91,7 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
           sfxGain.disconnect(dest);
         } catch (e) {}
         sfxGain.connect(dest);
+        console.log(`🔊 [AudioGraph] SFX routing complete: sfx → recorder`);
       }
 
       return dest.stream;
@@ -81,6 +101,31 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
       return streamDestRef.current?.stream || null;
     }
   };
+
+  // Reset audio source node when audio source changes (important for Auto Mode with different tracks)
+  useEffect(() => {
+    const audioEl = audioRef.current;
+    if (!audioEl) return;
+
+    const handleLoadStart = () => {
+      console.log(`🔄 [RecordingSystem] Audio source changing, resetting source node...`);
+      // Disconnect old source node safely
+      if (sourceNodeRef.current) {
+        try {
+          sourceNodeRef.current.disconnect();
+        } catch (e) {
+          // Ignore disconnect errors
+        }
+        sourceNodeRef.current = null;
+        console.log(`✅ [RecordingSystem] Source node reset complete`);
+      }
+    };
+
+    audioEl.addEventListener('loadstart', handleLoadStart);
+    return () => {
+      audioEl.removeEventListener('loadstart', handleLoadStart);
+    };
+  }, [audioRef]);
 
   useEffect(() => {
     if (isRecording) {
@@ -183,6 +228,24 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
         console.warn(`⚠️ [RecordingSystem] No audio source available - recording video only`);
       }
 
+      // CRITICAL FIX: Start playing audio BEFORE initializing audio graph
+      // This ensures the audio element is actively playing when we capture its stream
+      if (audioEl.src || audioEl.currentSrc) {
+        console.log(`   🎵 Starting audio playback BEFORE recording...`);
+        try {
+          await audioEl.play();
+          console.log(`   ✅ Audio playing successfully (paused: ${audioEl.paused}, volume: ${audioEl.volume})`);
+
+          // Wait a brief moment for audio to stabilize
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (e) {
+          console.error(`   ❌ Audio playback failed:`, e);
+          console.warn(`   ⚠️ Continuing without audio...`);
+        }
+      } else {
+        console.warn(`   ⚠️ No audio source - recording video only`);
+      }
+
       const audioStream = initAudioGraph();
       if (!audioStream) {
         console.error(`❌ [RecordingSystem] Could not initialize audio stream`);
@@ -195,15 +258,6 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
       if (musicGainRef.current && ctx) {
         musicGainRef.current.gain.setValueAtTime(0, ctx.currentTime);
         musicGainRef.current.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 1.0);
-      }
-
-      // اطمینان از پخش موسیقی
-      if (audioEl.src || audioEl.currentSrc) {
-        console.log(`   Starting audio playback...`);
-        audioEl
-          .play()
-          .then(() => console.log(`✅ [RecordingSystem] Audio playing successfully`))
-          .catch((e) => console.error(`❌ [RecordingSystem] Audio playback failed:`, e));
       }
 
       const videoStream = (canvas as any).captureStream(60);

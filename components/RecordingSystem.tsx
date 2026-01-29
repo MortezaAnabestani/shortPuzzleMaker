@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { YouTubeMetadata } from "../services/geminiService";
 import { sonicEngine } from "../services/proceduralAudio";
 
@@ -25,8 +25,10 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
   const streamDestRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   const musicGainRef = useRef<GainNode | null>(null);
   const currentMimeType = useRef<string>("");
+  const recordingStartTimeRef = useRef<number>(0);
+  const isRecordingActiveRef = useRef<boolean>(false);
 
-  const initAudioGraph = () => {
+  const initAudioGraph = useCallback(() => {
     const audioEl = audioRef.current;
     if (!audioEl) return null;
 
@@ -100,7 +102,7 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
       // در صورت بروز خطا، حداقل استریم مقصد را برمی‌گردانیم تا ریکورد کلا متوقف نشود
       return streamDestRef.current?.stream || null;
     }
-  };
+  }, [audioRef]);
 
   // Reset audio source node when audio source changes (important for Auto Mode with different tracks)
   useEffect(() => {
@@ -127,145 +129,121 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
     };
   }, [audioRef]);
 
-  useEffect(() => {
-    if (isRecording) {
-      startRecording();
-    } else {
-      stopRecording();
-    }
-  }, [isRecording]);
+  // Define stopRecording BEFORE the useEffect that uses it
+  const stopRecording = useCallback(() => {
+    console.log(`🛑 [RecordingSystem] Stop recording requested...`);
+    console.log(`   MediaRecorder state: ${mediaRecorderRef.current?.state || 'null'}`);
+    console.log(`   isRecordingActive: ${isRecordingActiveRef.current}`);
 
-  const startRecording = async () => {
-    const canvas = getCanvas();
-    const audioEl = audioRef.current;
-
-    console.log(`🎬 [RecordingSystem] Starting recording...`);
-    console.log(`   Canvas: ${canvas ? "OK" : "MISSING"}`);
-    console.log(`   Audio Element: ${audioEl ? "OK" : "MISSING"}`);
-
-    if (!canvas || !audioEl) {
-      console.error(`❌ [RecordingSystem] Cannot start - missing ${!canvas ? "canvas" : "audio element"}`);
+    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === "inactive") {
+      console.warn(`⚠️ [RecordingSystem] No active recording to stop`);
+      isRecordingActiveRef.current = false;
       return;
     }
 
-    console.log(`   Audio src: "${audioEl.src || "EMPTY"}"`);
-    console.log(`   Audio currentSrc: "${audioEl.currentSrc || "EMPTY"}"`);
-    console.log(`   Audio readyState: ${audioEl.readyState}`);
+    const ctx = sonicEngine.getContext();
+    const recordingDuration = (Date.now() - recordingStartTimeRef.current) / 1000;
+
+    console.log(`   Recording duration so far: ${recordingDuration.toFixed(1)}s`);
+    console.log(`   Chunks collected so far: ${chunksRef.current.length}`);
+
+    // فید-اوت سریع صدا در انتهای ویدئو
+    if (musicGainRef.current && ctx) {
+      try {
+        musicGainRef.current.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+      } catch (e) {
+        console.warn(`⚠️ Audio fade-out failed:`, e);
+      }
+    }
+
+    // CRITICAL: Request final data chunk before stopping
+    if (mediaRecorderRef.current.state === "recording") {
+      console.log(`   📦 Requesting final data chunk...`);
+      try {
+        mediaRecorderRef.current.requestData();
+      } catch (e) {
+        console.warn(`⚠️ requestData failed:`, e);
+      }
+    }
+
+    // توقف ریکوردر بعد از نیم ثانیه فید-اوت
+    setTimeout(() => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        console.log(`   🛑 Stopping MediaRecorder...`);
+        mediaRecorderRef.current.stop();
+      }
+    }, 500);
+  }, []);
+
+  // startRecording function
+  const startRecording = useCallback(async () => {
+    const canvas = getCanvas();
+    const audioEl = audioRef.current;
+
+    console.log(`🎬 [RecordingSystem] Starting recording IMMEDIATELY...`);
+    console.log(`   Canvas: ${canvas ? "OK" : "MISSING"}`);
+    console.log(`   Audio Element: ${audioEl ? "OK" : "MISSING"}`);
+
+    if (!canvas) {
+      console.error(`❌ [RecordingSystem] Cannot start - missing canvas`);
+      return;
+    }
+
+    // Prevent double-start
+    if (isRecordingActiveRef.current) {
+      console.warn(`⚠️ [RecordingSystem] Recording already active, ignoring start request`);
+      return;
+    }
+
+    isRecordingActiveRef.current = true;
+    recordingStartTimeRef.current = Date.now();
 
     try {
       const ctx = sonicEngine.getContext();
+
+      // Resume audio context immediately (non-blocking)
       if (ctx && ctx.state === "suspended") {
         console.log(`   Resuming suspended audio context...`);
-        await ctx.resume();
+        ctx.resume().catch(e => console.warn(`Audio context resume failed:`, e));
       }
 
-      // CRITICAL FIX: Wait for audio to be ready before recording
-      if (audioEl.src || audioEl.currentSrc) {
-        if (audioEl.readyState < 3) {
-          console.log(
-            `⏳ [RecordingSystem] Waiting for audio to load (readyState: ${audioEl.readyState})...`
-          );
+      // CRITICAL FIX: Start video capture IMMEDIATELY - don't wait for audio
+      console.log(`   🎥 Starting video capture IMMEDIATELY...`);
+      const videoStream = (canvas as any).captureStream(60);
+      const tracks = [...videoStream.getVideoTracks()];
 
-          // Try to trigger loading by playing then pausing
-          try {
-            const playPromise = audioEl.play();
-            if (playPromise) {
-              await playPromise.catch(() => {});
-              audioEl.pause();
-              audioEl.currentTime = 0;
-            }
-          } catch (e) {
-            console.warn(`⚠️ Could not pre-play audio:`, e);
+      console.log(`   Video tracks captured: ${tracks.length}`);
+
+      // Initialize audio graph synchronously (best effort)
+      let audioStream: MediaStream | null = null;
+      try {
+        audioStream = initAudioGraph();
+        if (audioStream) {
+          const audioTracks = audioStream.getAudioTracks();
+          console.log(`   Audio stream tracks: ${audioTracks.length}`);
+          if (audioTracks.length > 0) {
+            tracks.push(audioTracks[0]);
           }
-
-          await new Promise<void>((resolve) => {
-            const timeout = setTimeout(() => {
-              console.warn(`⚠️ [RecordingSystem] Audio loading timeout - proceeding anyway`);
-              resolve(); // Don't reject, just proceed
-            }, 5000); // Reduced timeout to 5s
-
-            const onCanPlay = () => {
-              clearTimeout(timeout);
-              audioEl.removeEventListener("canplay", onCanPlay);
-              audioEl.removeEventListener("error", onError);
-              audioEl.removeEventListener("loadeddata", onLoadedData);
-              console.log(`✅ [RecordingSystem] Audio ready! (readyState: ${audioEl.readyState})`);
-              resolve();
-            };
-
-            const onLoadedData = () => {
-              clearTimeout(timeout);
-              audioEl.removeEventListener("canplay", onCanPlay);
-              audioEl.removeEventListener("error", onError);
-              audioEl.removeEventListener("loadeddata", onLoadedData);
-              console.log(`✅ [RecordingSystem] Audio data loaded! (readyState: ${audioEl.readyState})`);
-              resolve();
-            };
-
-            const onError = (e: Event) => {
-              clearTimeout(timeout);
-              audioEl.removeEventListener("canplay", onCanPlay);
-              audioEl.removeEventListener("error", onError);
-              audioEl.removeEventListener("loadeddata", onLoadedData);
-              console.error(`❌ [RecordingSystem] Audio load error:`, e);
-              console.warn(`⚠️ Proceeding with recording despite audio error`);
-              resolve(); // Don't reject - proceed with video-only recording
-            };
-
-            if (audioEl.readyState >= 2) {
-              clearTimeout(timeout);
-              resolve();
-            } else {
-              audioEl.addEventListener("canplay", onCanPlay);
-              audioEl.addEventListener("loadeddata", onLoadedData);
-              audioEl.addEventListener("error", onError);
-            }
-          });
-        } else {
-          console.log(`✅ [RecordingSystem] Audio already ready (readyState: ${audioEl.readyState})`);
         }
-      } else {
-        console.warn(`⚠️ [RecordingSystem] No audio source available - recording video only`);
+      } catch (e) {
+        console.warn(`⚠️ [RecordingSystem] Audio graph init failed, continuing video-only:`, e);
       }
 
-      // CRITICAL FIX: Start playing audio BEFORE initializing audio graph
-      // This ensures the audio element is actively playing when we capture its stream
-      if (audioEl.src || audioEl.currentSrc) {
-        console.log(`   🎵 Starting audio playback BEFORE recording...`);
-        try {
-          await audioEl.play();
-          console.log(`   ✅ Audio playing successfully (paused: ${audioEl.paused}, volume: ${audioEl.volume})`);
+      // Start audio playback (non-blocking)
+      if (audioEl && (audioEl.src || audioEl.currentSrc)) {
+        console.log(`   🎵 Starting audio playback...`);
+        audioEl.play().catch(e => {
+          console.warn(`⚠️ Audio playback failed:`, e);
+        });
 
-          // Wait a brief moment for audio to stabilize
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (e) {
-          console.error(`   ❌ Audio playback failed:`, e);
-          console.warn(`   ⚠️ Continuing without audio...`);
+        // Fade in audio
+        if (musicGainRef.current && ctx) {
+          musicGainRef.current.gain.setValueAtTime(0, ctx.currentTime);
+          musicGainRef.current.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 1.0);
         }
       } else {
         console.warn(`   ⚠️ No audio source - recording video only`);
       }
-
-      const audioStream = initAudioGraph();
-      if (!audioStream) {
-        console.error(`❌ [RecordingSystem] Could not initialize audio stream`);
-        throw new Error("Could not initialize audio stream");
-      }
-
-      console.log(`   Audio stream tracks: ${audioStream.getAudioTracks().length}`);
-
-      // شروع ملایم صدا
-      if (musicGainRef.current && ctx) {
-        musicGainRef.current.gain.setValueAtTime(0, ctx.currentTime);
-        musicGainRef.current.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 1.0);
-      }
-
-      const videoStream = (canvas as any).captureStream(60);
-      const audioTracks = audioStream.getAudioTracks();
-
-      // ترکیب ترک‌های ویدئو و صدا
-      const tracks = [...videoStream.getVideoTracks()];
-      if (audioTracks.length > 0) tracks.push(audioTracks[0]);
 
       const combinedStream = new MediaStream(tracks);
 
@@ -275,60 +253,84 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
         ) || "video/webm";
       currentMimeType.current = mimeType;
 
+      console.log(`   📼 Creating MediaRecorder with MIME: ${mimeType}`);
+
       const recorder = new MediaRecorder(combinedStream, {
         mimeType,
         videoBitsPerSecond: 25000000,
       });
 
       chunksRef.current = [];
+
       recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
+          console.log(`   📦 Chunk received: ${(e.data.size / 1024).toFixed(1)}KB (total chunks: ${chunksRef.current.length})`);
+        }
       };
 
       recorder.onstop = () => {
+        isRecordingActiveRef.current = false;
+        const recordingDuration = (Date.now() - recordingStartTimeRef.current) / 1000;
         const finalBlob = new Blob(chunksRef.current, { type: currentMimeType.current });
-        console.log(
-          `📹 [RecordingSystem] Recording stopped! Blob size: ${(finalBlob.size / 1024 / 1024).toFixed(2)}MB`
-        );
+
+        console.log(`\n📹 [RecordingSystem] ══════════════════════════════════`);
+        console.log(`   Recording COMPLETE!`);
+        console.log(`   Duration: ${recordingDuration.toFixed(1)}s`);
+        console.log(`   Blob size: ${(finalBlob.size / 1024 / 1024).toFixed(2)}MB`);
         console.log(`   Chunks collected: ${chunksRef.current.length}`);
         console.log(`   MIME type: ${currentMimeType.current}`);
-        console.log(`   Calling onRecordingComplete with blob...`);
+        console.log(`   Expected duration: ${durationMinutes * 60}s`);
+        console.log(`══════════════════════════════════════════════════════\n`);
 
-        // CRITICAL: Verify blob is valid
+        // CRITICAL: Verify blob is valid and complete
         if (finalBlob.size === 0) {
           console.error(`❌ [RecordingSystem] FATAL: Blob is empty! No data was recorded!`);
+        } else if (recordingDuration < (durationMinutes * 60 * 0.8)) {
+          console.warn(`⚠️ [RecordingSystem] WARNING: Recording duration (${recordingDuration.toFixed(1)}s) is less than 80% of expected (${(durationMinutes * 60).toFixed(1)}s)`);
         } else {
-          console.log(`✅ [RecordingSystem] Blob is valid, calling callback...`);
+          console.log(`✅ [RecordingSystem] Recording duration looks good!`);
         }
 
         onRecordingComplete(finalBlob);
-        console.log(`✅ [RecordingSystem] onRecordingComplete called successfully`);
+        console.log(`✅ [RecordingSystem] onRecordingComplete callback invoked`);
       };
 
-      recorder.start(1000);
+      recorder.onerror = (e) => {
+        console.error(`❌ [RecordingSystem] MediaRecorder error:`, e);
+        isRecordingActiveRef.current = false;
+      };
+
+      // CRITICAL: Start recording IMMEDIATELY with smaller chunks for more reliable capture
+      recorder.start(500); // 500ms chunks for finer granularity
       mediaRecorderRef.current = recorder;
+
+      console.log(`   ✅ MediaRecorder started! Recording in progress...`);
+      console.log(`   ⏱️ Recording started at: ${new Date().toISOString()}`);
+
     } catch (e) {
-      console.error("Recording Engine Failure:", e);
+      console.error("❌ Recording Engine Failure:", e);
+      isRecordingActiveRef.current = false;
     }
-  };
+  }, [getCanvas, audioRef, durationMinutes, onRecordingComplete, initAudioGraph]);
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      const ctx = sonicEngine.getContext();
+  // Main effect to control recording
+  useEffect(() => {
+    console.log(`🔄 [RecordingSystem] isRecording changed to: ${isRecording}`);
+    if (isRecording) {
+      startRecording();
+    } else {
+      stopRecording();
+    }
 
-      // فید-اوت سریع صدا در انتهای ویدئو
-      if (musicGainRef.current && ctx) {
-        musicGainRef.current.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+    // Cleanup on unmount
+    return () => {
+      if (isRecordingActiveRef.current) {
+        console.log(`🧹 [RecordingSystem] Cleanup: stopping active recording`);
+        stopRecording();
       }
-
-      // توقف ریکوردر بعد از نیم ثانیه فید-اوت
-      setTimeout(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-          mediaRecorderRef.current.stop();
-        }
-      }, 500);
-    }
-  };
+    };
+  }, [isRecording, startRecording, stopRecording]);
 
   return null;
 };

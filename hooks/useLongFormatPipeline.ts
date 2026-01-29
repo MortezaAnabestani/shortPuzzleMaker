@@ -4,7 +4,7 @@
  * Manages multi-scene puzzle video generation for 8+ minute content
  */
 
-import { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { LongFormStructure, LongFormScene } from '../types-longform';
 import { UserPreferences, ArtStyle } from '../types';
 import { generateArtImage, YouTubeMetadata } from '../services/geminiService';
@@ -28,6 +28,13 @@ export interface LongFormatProgress {
   overallProgress: number; // 0-100 percentage for entire video
   currentSceneTitle: string | null;
   estimatedTimeRemaining: number | null; // in seconds
+}
+
+interface SceneBlob {
+  sceneIndex: number;
+  sceneTitle: string;
+  blob: Blob;
+  duration: number;
 }
 
 interface UseLongFormatPipelineProps {
@@ -60,10 +67,12 @@ export const useLongFormatPipeline = ({
   const [isRecording, setIsRecording] = useState(false);
   const [isSolving, setIsSolving] = useState(false);
   const [metadata, setMetadata] = useState<YouTubeMetadata | null>(null);
+  const [sceneBlobs, setSceneBlobs] = useState<SceneBlob[]>([]);
 
   const structureRef = useRef<LongFormStructure | null>(null);
   const scenesCompletedRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
+  const pendingRecordingResolveRef = useRef<((blob: Blob) => void) | null>(null);
 
   /**
    * Load music for a specific scene
@@ -145,9 +154,22 @@ export const useLongFormatPipeline = ({
   };
 
   /**
+   * Handle recording completion callback from RecordingSystem
+   */
+  const handleRecordingComplete = useCallback((blob: Blob) => {
+    console.log(`📹 [LongFormat] Recording complete callback received`);
+    console.log(`   Blob size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+
+    if (pendingRecordingResolveRef.current) {
+      pendingRecordingResolveRef.current(blob);
+      pendingRecordingResolveRef.current = null;
+    }
+  }, []);
+
+  /**
    * Start recording a specific scene
    */
-  const recordScene = async (scene: LongFormScene): Promise<void> => {
+  const recordScene = async (scene: LongFormScene, sceneIndex: number): Promise<void> => {
     console.log(`🎬 [LongFormat] Starting recording for scene ${scene.id}: ${scene.title}`);
 
     setProgress(prev => ({
@@ -164,19 +186,47 @@ export const useLongFormatPipeline = ({
       subject: scene.title,
     }));
 
+    // Create a promise that will be resolved when recording completes
+    const recordingPromise = new Promise<Blob>((resolve) => {
+      pendingRecordingResolveRef.current = resolve;
+    });
+
     // Start puzzle solving and recording
     setIsSolving(true);
     setIsRecording(true);
 
-    // Wait for scene duration + buffer
+    // Wait for scene duration + buffer, then stop recording
     const recordingDuration = scene.duration * 1000 + 2000; // Add 2s buffer
     await new Promise(resolve => setTimeout(resolve, recordingDuration));
 
-    // Stop recording
+    // Stop recording - this will trigger the RecordingSystem to call onRecordingComplete
     setIsSolving(false);
     setIsRecording(false);
 
-    console.log(`   ✅ Recording completed for scene ${scene.id}`);
+    // Wait for recording blob with a timeout
+    const timeoutPromise = new Promise<Blob>((_, reject) =>
+      setTimeout(() => reject(new Error('Recording completion timeout')), 10000)
+    );
+
+    try {
+      const blob = await Promise.race([recordingPromise, timeoutPromise]);
+
+      // Store the scene blob
+      const sceneBlob: SceneBlob = {
+        sceneIndex,
+        sceneTitle: scene.title,
+        blob,
+        duration: scene.duration,
+      };
+      setSceneBlobs(prev => [...prev, sceneBlob]);
+
+      console.log(`   ✅ Recording completed and blob saved for scene ${scene.id}`);
+      console.log(`   📦 Total scene blobs collected: ${sceneIndex + 1}`);
+    } catch (e) {
+      console.warn(`   ⚠️ Recording blob not received within timeout, continuing...`);
+      // Clear the pending resolver
+      pendingRecordingResolveRef.current = null;
+    }
 
     setProgress(prev => ({
       ...prev,
@@ -215,7 +265,7 @@ export const useLongFormatPipeline = ({
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Step 4: Record this scene
-      await recordScene(scene);
+      await recordScene(scene, sceneIndex);
 
       // Step 5: Transition to next scene (if not last)
       if (sceneIndex < (structureRef.current?.scenes.length || 0) - 1) {
@@ -361,8 +411,10 @@ export const useLongFormatPipeline = ({
     setIsRecording(false);
     setIsSolving(false);
     setMetadata(null);
+    setSceneBlobs([]);
     structureRef.current = null;
     scenesCompletedRef.current = 0;
+    pendingRecordingResolveRef.current = null;
   }, []);
 
   return {
@@ -373,9 +425,11 @@ export const useLongFormatPipeline = ({
     isRecording,
     isSolving,
     metadata,
+    sceneBlobs,
 
     // Actions
     executeLongFormatPipeline,
     resetPipeline,
+    handleRecordingComplete,
   };
 };

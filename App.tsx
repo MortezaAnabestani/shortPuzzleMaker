@@ -225,12 +225,12 @@ const AppContent: React.FC = () => {
       )}
 
       <RecordingSystem
-        isRecording={state.isRecording}
+        isRecording={videoMode === 'short' ? state.isRecording : longFormatPipeline.isRecording}
         getCanvas={() => canvasHandleRef.current?.getCanvas() || null}
         audioRef={audioRef}
-        metadata={metadata}
-        durationMinutes={preferences.durationMinutes}
-        onRecordingComplete={setLastVideoBlob}
+        metadata={videoMode === 'short' ? metadata : longFormatPipeline.metadata}
+        durationMinutes={videoMode === 'short' ? preferences.durationMinutes : (longFormatPipeline.currentScene?.duration || 60) / 60}
+        onRecordingComplete={videoMode === 'short' ? setLastVideoBlob : longFormatPipeline.handleRecordingComplete}
       />
 
       <aside className="w-[420px] z-40 h-full glass-panel flex flex-col shrink-0">

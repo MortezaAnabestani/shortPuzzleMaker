@@ -13,27 +13,27 @@ import {
 
 /**
  * 1. Historical Reconstruction Template
- * مثال: سقوط امپراتوری روم
+ * Example: Fall of the Roman Empire
  */
 export const createHistoricalReconstructionTemplate = (): LongFormStructure => ({
   genre: LongFormGenre.HISTORICAL_RECONSTRUCTION,
   totalDuration: 8,
-  title: 'سقوط امپراتوری روم: بازسازی تاریخی',
-  description: 'سفری در زمان به دوران طلایی و سقوط یکی از بزرگترین امپراتوری‌های تاریخ',
+  title: 'Fall of the Roman Empire: A Historical Reconstruction',
+  description: 'A journey through time to the golden age and collapse of one of history\'s greatest empires',
   scenes: [
     {
       id: 1,
-      title: 'دوران طلایی',
+      title: 'The Golden Age',
       duration: 80,
       pieceCount: 400,
       imagePrompt: 'Ancient Roman forum at golden hour, marble columns, bustling marketplace, citizens in togas, hyperrealistic',
-      storyBeat: 'در سال ۱۱۷ میلادی، امپراتوری روم به وسیع‌ترین حد خود رسید',
+      storyBeat: 'In 117 AD, the Roman Empire reached its greatest extent',
       musicMood: 'Epic Glory',
       factCards: [
         {
           timestamp: 15,
           type: 'statistic',
-          content: '🏛️ رم بر ۵ میلیون کیلومتر مربع حکم می‌راند',
+          content: '🏛️ Rome ruled over 5 million square kilometers',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -41,7 +41,7 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
         {
           timestamp: 50,
           type: 'fact',
-          content: '⚔️ ارتش روم ۳۰ لژیون داشت (۱۵۰٫۰۰۰ سرباز)',
+          content: '⚔️ The Roman army had 30 legions (150,000 soldiers)',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -51,17 +51,17 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
     },
     {
       id: 2,
-      title: 'نخستین نشانه‌ها',
+      title: 'First Signs of Trouble',
       duration: 90,
       pieceCount: 600,
       imagePrompt: 'Roman military camp under stormy sky, barbarian tribes in distance, tension, dramatic lighting',
-      storyBeat: 'اما از سال ۲۳۵ میلادی، بحران شروع شد',
+      storyBeat: 'But from 235 AD, the crisis began',
       musicMood: 'Building Tension',
       factCards: [
         {
           timestamp: 20,
           type: 'question',
-          content: '❓ چه چیزی باعث سقوط روم شد؟',
+          content: '❓ What caused the fall of Rome?',
           duration: 3,
           position: 'center',
           animation: 'pop',
@@ -69,7 +69,7 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
         {
           timestamp: 60,
           type: 'fact',
-          content: '📉 در ۵۰ سال، ۲۶ امپراتور به قدرت رسیدند',
+          content: '📉 In 50 years, 26 emperors rose to power',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -79,17 +79,17 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
     },
     {
       id: 3,
-      title: 'حمله بربرها',
+      title: 'Barbarian Invasions',
       duration: 100,
       pieceCount: 800,
       imagePrompt: 'Barbarian invasion, Rome under siege, burning buildings, chaos, epic battle scene',
-      storyBeat: 'قبایل ژرمن و گوت‌ها به مرزهای امپراتوری حمله کردند',
+      storyBeat: 'Germanic and Gothic tribes attacked the empire\'s borders',
       musicMood: 'Intense Battle',
       factCards: [
         {
           timestamp: 15,
           type: 'fact',
-          content: '⚔️ نبرد آدریانوپل (۳۷۸ م): شکست بزرگ روم',
+          content: '⚔️ Battle of Adrianople (378 AD): Rome\'s great defeat',
           duration: 4,
           position: 'top',
           animation: 'slide',
@@ -97,7 +97,7 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
         {
           timestamp: 50,
           type: 'countdown',
-          content: '⏳ ۹۶ سال تا سقوط نهایی',
+          content: '⏳ 96 years until the final fall',
           duration: 3,
           position: 'bottom',
           animation: 'fade',
@@ -105,7 +105,7 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
         {
           timestamp: 80,
           type: 'quote',
-          content: '"روم توسط بربرها نابود نشد، از درون پوسید" - تاریخ‌نگار',
+          content: '"Rome was not destroyed by barbarians, it rotted from within" - Historian',
           duration: 5,
           position: 'center',
           animation: 'fade',
@@ -115,17 +115,17 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
     },
     {
       id: 4,
-      title: 'تقسیم امپراتوری',
+      title: 'Empire Divided',
       duration: 70,
       pieceCount: 500,
       imagePrompt: 'Split Roman Empire map, Eastern and Western divisions, political intrigue, dramatic contrast',
-      storyBeat: 'در سال ۳۹۵ میلادی، امپراتوری به دو بخش شرقی و غربی تقسیم شد',
+      storyBeat: 'In 395 AD, the Empire was divided into Eastern and Western parts',
       musicMood: 'Melancholic',
       factCards: [
         {
           timestamp: 15,
           type: 'fact',
-          content: '🗺️ رم غربی: ضعیف | رم شرقی (بیزانس): قوی',
+          content: '🗺️ Western Rome: Weak | Eastern Rome (Byzantium): Strong',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -133,7 +133,7 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
         {
           timestamp: 50,
           type: 'statistic',
-          content: '📊 رم غربی فقط ۸۱ سال دیگر دوام آورد',
+          content: '📊 Western Rome lasted only 81 more years',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -143,17 +143,17 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
     },
     {
       id: 5,
-      title: 'سقوط نهایی',
+      title: 'The Final Fall',
       duration: 80,
       pieceCount: 600,
       imagePrompt: 'Fall of Rome 476 AD, barbarian king Odoacer deposing last emperor, ruins, sunset over fallen empire',
-      storyBeat: 'در سال ۴۷۶ میلادی، آخرین امپراتور رم غربی برکنار شد',
+      storyBeat: 'In 476 AD, the last Western Roman Emperor was deposed',
       musicMood: 'Tragic Fall',
       factCards: [
         {
           timestamp: 15,
           type: 'fact',
-          content: '👑 رومولوس آگوستولوس: آخرین امپراتور (۱۶ ساله)',
+          content: '👑 Romulus Augustulus: The last emperor (16 years old)',
           duration: 5,
           position: 'top',
           animation: 'fade',
@@ -161,7 +161,7 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
         {
           timestamp: 50,
           type: 'statistic',
-          content: '📅 ۱۲۲۹ سال از تاسیس رم گذشته بود',
+          content: '📅 1,229 years had passed since Rome\'s founding',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -171,17 +171,17 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
     },
     {
       id: 6,
-      title: 'میراث جاودان',
+      title: 'Eternal Legacy',
       duration: 60,
       pieceCount: 400,
       imagePrompt: 'Modern Rome, Colosseum, ancient ruins merged with modern city, legacy of Rome, cinematic',
-      storyBeat: 'اما میراث روم هرگز نمرد: حقوق، زبان، معماری، و تمدن',
+      storyBeat: 'But Rome\'s legacy never died: law, language, architecture, and civilization',
       musicMood: 'Hopeful Legacy',
       factCards: [
         {
           timestamp: 15,
           type: 'fact',
-          content: '🏛️ میراث روم: دموکراسی، حقوق، زبان، معماری',
+          content: '🏛️ Rome\'s Legacy: Democracy, Law, Language, Architecture',
           duration: 5,
           position: 'center',
           animation: 'pop',
@@ -189,7 +189,7 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
         {
           timestamp: 40,
           type: 'quote',
-          content: '"تمام راه‌ها به رم ختم می‌شوند"',
+          content: '"All roads lead to Rome"',
           duration: 3,
           position: 'bottom',
           animation: 'fade',
@@ -223,27 +223,27 @@ export const createHistoricalReconstructionTemplate = (): LongFormStructure => (
 
 /**
  * 2. Scientific Deep-Dive Template
- * مثال: از کهکشان تا DNA
+ * Example: From Galaxy to DNA
  */
 export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
   genre: LongFormGenre.SCIENTIFIC_DEEPDIVE,
   totalDuration: 8,
-  title: 'از کهکشان تا DNA: سفر به اعماق هستی',
-  description: 'یک سفر علمی شگفت‌انگیز از بزرگ‌ترین ساختار تا کوچک‌ترین واحد حیات',
+  title: 'From Galaxy to DNA: Journey to the Depths of Existence',
+  description: 'An amazing scientific journey from the largest structure to the smallest unit of life',
   scenes: [
     {
       id: 1,
-      title: 'کهکشان راه شیری',
+      title: 'The Milky Way Galaxy',
       duration: 90,
       pieceCount: 500,
       imagePrompt: 'Milky Way galaxy from space, billions of stars, cosmic beauty, ultra detailed, scientific visualization',
-      storyBeat: 'کهکشان ما حاوی ۲۰۰-۴۰۰ میلیارد ستاره است',
+      storyBeat: 'Our galaxy contains 200-400 billion stars',
       musicMood: 'Cosmic Wonder',
       factCards: [
         {
           timestamp: 20,
           type: 'statistic',
-          content: '🌌 قطر کهکشان: ۱۰۰٫۰۰۰ سال نوری',
+          content: '🌌 Galaxy diameter: 100,000 light-years',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -251,7 +251,7 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'fact',
-          content: '⭐ خورشید فقط یکی از میلیاردها ستاره است',
+          content: '⭐ The Sun is just one of billions of stars',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -261,17 +261,17 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
     },
     {
       id: 2,
-      title: 'منظومه شمسی',
+      title: 'The Solar System',
       duration: 90,
       pieceCount: 600,
       imagePrompt: 'Solar system with all planets, asteroid belt, detailed planetary textures, scientific accuracy',
-      storyBeat: 'منظومه شمسی ما: ۸ سیاره، ۵ سیاره کوتوله، و میلیاردها سیارک',
+      storyBeat: 'Our solar system: 8 planets, 5 dwarf planets, and billions of asteroids',
       musicMood: 'Exploration',
       factCards: [
         {
           timestamp: 15,
           type: 'question',
-          content: '❓ چرا پلوتو دیگر سیاره نیست؟',
+          content: '❓ Why is Pluto no longer a planet?',
           duration: 3,
           position: 'center',
           animation: 'pop',
@@ -279,7 +279,7 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'fact',
-          content: '🪐 مشتری می‌تواند ۱۳۰۰ زمین را در خود جای دهد',
+          content: '🪐 Jupiter could fit 1,300 Earths inside it',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -289,17 +289,17 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
     },
     {
       id: 3,
-      title: 'سیاره زمین',
+      title: 'Planet Earth',
       duration: 100,
       pieceCount: 800,
       imagePrompt: 'Earth from space, blue marble, clouds, continents, oceans, breathtaking view, NASA quality',
-      storyBeat: 'تنها جهانی که حیات را در آن می‌شناسیم',
+      storyBeat: 'The only world where we know life exists',
       musicMood: 'Earth Beauty',
       factCards: [
         {
           timestamp: 20,
           type: 'statistic',
-          content: '🌍 سن زمین: ۴.۵ میلیارد سال',
+          content: '🌍 Age of Earth: 4.5 billion years',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -307,7 +307,7 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'fact',
-          content: '💧 ۷۱٪ سطح زمین اقیانوس است',
+          content: '💧 71% of Earth\'s surface is ocean',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -317,17 +317,17 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
     },
     {
       id: 4,
-      title: 'بدن انسان',
+      title: 'The Human Body',
       duration: 80,
       pieceCount: 700,
       imagePrompt: 'Human anatomy, organs, circulatory system, scientific illustration, detailed, educational',
-      storyBeat: 'بدن انسان: ماشینی پیچیده از ۳۷ تریلیون سلول',
+      storyBeat: 'The human body: A complex machine of 37 trillion cells',
       musicMood: 'Biological Wonder',
       factCards: [
         {
           timestamp: 15,
           type: 'statistic',
-          content: '🫀 قلب در طول عمر ۲.۵ میلیارد بار می‌زند',
+          content: '🫀 The heart beats 2.5 billion times in a lifetime',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -335,7 +335,7 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
         {
           timestamp: 55,
           type: 'fact',
-          content: '🧠 مغز انسان ۸۶ میلیارد نورون دارد',
+          content: '🧠 The human brain has 86 billion neurons',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -345,17 +345,17 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
     },
     {
       id: 5,
-      title: 'سلول',
+      title: 'The Cell',
       duration: 90,
       pieceCount: 900,
       imagePrompt: 'Human cell cross-section, nucleus, mitochondria, organelles, scientific accuracy, microscopic view',
-      storyBeat: 'سلول: واحد بنیادی حیات',
+      storyBeat: 'The cell: The fundamental unit of life',
       musicMood: 'Microscopic Discovery',
       factCards: [
         {
           timestamp: 20,
           type: 'fact',
-          content: '🔬 میتوکندری: نیروگاه سلول',
+          content: '🔬 Mitochondria: The powerhouse of the cell',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -363,7 +363,7 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'question',
-          content: '❓ هسته سلول چه می‌کند؟',
+          content: '❓ What does the cell nucleus do?',
           duration: 3,
           position: 'center',
           animation: 'pop',
@@ -373,17 +373,17 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
     },
     {
       id: 6,
-      title: 'DNA: نقشه حیات',
+      title: 'DNA: The Blueprint of Life',
       duration: 70,
       pieceCount: 600,
       imagePrompt: 'DNA double helix, genetic code, colorful base pairs, scientific beauty, ultra detailed',
-      storyBeat: 'DNA: کتابی که داستان تمام موجودات زنده را روایت می‌کند',
+      storyBeat: 'DNA: A book that tells the story of all living things',
       musicMood: 'Genetic Code',
       factCards: [
         {
           timestamp: 15,
           type: 'statistic',
-          content: '🧬 DNA انسان ۳ میلیارد جفت باز دارد',
+          content: '🧬 Human DNA has 3 billion base pairs',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -391,7 +391,7 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
         {
           timestamp: 45,
           type: 'fact',
-          content: '🔗 اگر DNA سلولی را باز کنید، ۲ متر طول دارد!',
+          content: '🔗 If you stretched out the DNA in a cell, it would be 2 meters long!',
           duration: 5,
           position: 'center',
           animation: 'pop',
@@ -420,27 +420,27 @@ export const createScientificDeepdiveTemplate = (): LongFormStructure => ({
 
 /**
  * 3. Mystery Reveal Template
- * مثال: معمای مثلث برمودا
+ * Example: The Bermuda Triangle Mystery
  */
 export const createMysteryRevealTemplate = (): LongFormStructure => ({
   genre: LongFormGenre.MYSTERY_REVEAL,
   totalDuration: 8,
-  title: 'مثلث برمودا: حقیقت پشت معما',
-  description: 'آیا واقعاً کشتی‌ها و هواپیماها در مثلث برمودا ناپدید می‌شوند؟',
+  title: 'The Bermuda Triangle: Truth Behind the Mystery',
+  description: 'Do ships and planes really disappear in the Bermuda Triangle?',
   scenes: [
     {
       id: 1,
-      title: 'رویداد مرموز',
+      title: 'The Mysterious Event',
       duration: 70,
       pieceCount: 400,
       imagePrompt: 'Bermuda Triangle from above, stormy ocean, mysterious fog, disappearing plane, cinematic',
-      storyBeat: 'دسامبر ۱۹۴۵: پنج هواپیمای نیروی دریایی آمریکا ناپدید شدند',
+      storyBeat: 'December 1945: Five U.S. Navy planes vanished',
       musicMood: 'Suspenseful Mystery',
       factCards: [
         {
           timestamp: 15,
           type: 'fact',
-          content: '✈️ پرواز ۱۹: ۵ هواپیما، ۱۴ خلبان، همگی ناپدید شدند',
+          content: '✈️ Flight 19: 5 planes, 14 pilots, all vanished',
           duration: 5,
           position: 'top',
           animation: 'fade',
@@ -448,7 +448,7 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'question',
-          content: '❓ چه اتفاقی افتاد؟',
+          content: '❓ What happened?',
           duration: 3,
           position: 'center',
           animation: 'pop',
@@ -458,17 +458,17 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
     },
     {
       id: 2,
-      title: 'نظریه ۱: امواج غول‌پیکر',
+      title: 'Theory 1: Rogue Waves',
       duration: 90,
       pieceCount: 600,
       imagePrompt: 'Rogue wave, massive ocean wave towering over ship, dramatic, realistic, terrifying',
-      storyBeat: 'آیا امواج غول‌پیکر مسئول هستند؟',
+      storyBeat: 'Are giant rogue waves responsible?',
       musicMood: 'Tension',
       factCards: [
         {
           timestamp: 20,
           type: 'statistic',
-          content: '🌊 ارتفاع موج: تا ۳۰ متر (ارتفاع ساختمان ۱۰ طبقه)',
+          content: '🌊 Wave height: Up to 30 meters (height of a 10-story building)',
           duration: 5,
           position: 'top',
           animation: 'slide',
@@ -476,7 +476,7 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
         {
           timestamp: 65,
           type: 'fact',
-          content: '⚠️ امواج غول‌پیکر می‌توانند ناگهانی ظاهر شوند',
+          content: '⚠️ Rogue waves can appear suddenly',
           duration: 4,
           position: 'bottom',
           animation: 'fade',
@@ -486,17 +486,17 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
     },
     {
       id: 3,
-      title: 'نظریه ۲: میدان مغناطیسی',
+      title: 'Theory 2: Magnetic Field',
       duration: 90,
       pieceCount: 700,
       imagePrompt: 'Magnetic anomaly, compass going haywire, electromagnetic interference, scientific visualization',
-      storyBeat: 'آیا میدان مغناطیسی قطب‌نما را گمراه می‌کند؟',
+      storyBeat: 'Does the magnetic field mislead compasses?',
       musicMood: 'Scientific Investigation',
       factCards: [
         {
           timestamp: 20,
           type: 'fact',
-          content: '🧭 قطب‌نماها در این منطقه رفتار غیرعادی دارند',
+          content: '🧭 Compasses behave unusually in this area',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -504,7 +504,7 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
         {
           timestamp: 65,
           type: 'statistic',
-          content: '📊 اما تحقیقات نشان می‌دهد این تأثیر ناچیز است',
+          content: '📊 But research shows this effect is negligible',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -514,17 +514,17 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
     },
     {
       id: 4,
-      title: 'نظریه ۳: متان از اعماق',
+      title: 'Theory 3: Methane from the Deep',
       duration: 80,
       pieceCount: 600,
       imagePrompt: 'Methane bubbles rising from ocean floor, underwater explosion, ship sinking, scientific accuracy',
-      storyBeat: 'آیا گاز متان از بستر اقیانوس کشتی‌ها را غرق می‌کند؟',
+      storyBeat: 'Does methane gas from the seabed sink ships?',
       musicMood: 'Revelation',
       factCards: [
         {
           timestamp: 20,
           type: 'fact',
-          content: '💨 حباب‌های متان می‌توانند چگالی آب را کاهش دهند',
+          content: '💨 Methane bubbles can reduce water density',
           duration: 5,
           position: 'top',
           animation: 'fade',
@@ -532,7 +532,7 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'statistic',
-          content: '🔬 آزمایش‌ها این نظریه را تأیید کردند',
+          content: '🔬 Experiments have confirmed this theory',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -542,17 +542,17 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
     },
     {
       id: 5,
-      title: 'حقیقت',
+      title: 'The Truth',
       duration: 90,
       pieceCount: 700,
       imagePrompt: 'Bermuda Triangle map with shipping lanes, busy ocean traffic, normal maritime activity',
-      storyBeat: 'حقیقت: مثلث برمودا خطرناک‌تر از سایر مناطق نیست!',
+      storyBeat: 'The truth: The Bermuda Triangle is no more dangerous than other areas!',
       musicMood: 'Truth Revealed',
       factCards: [
         {
           timestamp: 20,
           type: 'statistic',
-          content: '📊 نرخ حادثه در مثلث برمودا طبیعی است',
+          content: '📊 Accident rates in the Bermuda Triangle are normal',
           duration: 5,
           position: 'center',
           animation: 'pop',
@@ -560,7 +560,7 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'fact',
-          content: '✅ بیمه دریایی: بدون افزایش نرخ',
+          content: '✅ Marine insurance: No rate increase',
           duration: 4,
           position: 'bottom',
           animation: 'fade',
@@ -570,17 +570,17 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
     },
     {
       id: 6,
-      title: 'پایان معما',
+      title: 'Mystery Solved',
       duration: 60,
       pieceCount: 400,
       imagePrompt: 'Calm Bermuda Triangle, beautiful sunset, peaceful ocean, debunked myth, closure',
-      storyBeat: 'افسانه مثلث برمودا: ترکیبی از اغراق رسانه‌ای و خطای انسانی',
+      storyBeat: 'The Bermuda Triangle legend: A mix of media exaggeration and human error',
       musicMood: 'Peaceful Conclusion',
       factCards: [
         {
           timestamp: 15,
           type: 'quote',
-          content: '"حقیقت اغلب ساده‌تر از افسانه است"',
+          content: '"The truth is often simpler than the legend"',
           duration: 4,
           position: 'center',
           animation: 'fade',
@@ -588,7 +588,7 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
         {
           timestamp: 45,
           type: 'fact',
-          content: '🌍 هزاران کشتی و هواپیما هر روز ایمن عبور می‌کنند',
+          content: '🌍 Thousands of ships and planes pass safely every day',
           duration: 5,
           position: 'bottom',
           animation: 'slide',
@@ -617,27 +617,27 @@ export const createMysteryRevealTemplate = (): LongFormStructure => ({
 
 /**
  * 4. Geographic Journey Template
- * مثال: عجایب هفتگانه جهان
+ * Example: Seven Wonders of the World
  */
 export const createGeographicJourneyTemplate = (): LongFormStructure => ({
   genre: LongFormGenre.GEOGRAPHIC_JOURNEY,
   totalDuration: 8,
-  title: 'عجایب هفتگانه جدید: سفری در سرتاسر دنیا',
-  description: 'بازدید مجازی از هفت شاهکار معماری و طبیعی جهان',
+  title: 'New Seven Wonders: A Journey Around the World',
+  description: 'A virtual visit to seven architectural and natural masterpieces',
   scenes: [
     {
       id: 1,
-      title: 'دیوار بزرگ چین',
+      title: 'The Great Wall of China',
       duration: 70,
       pieceCount: 500,
       imagePrompt: 'Great Wall of China winding through misty mountains, aerial view, sunrise, majestic, cinematic',
-      storyBeat: 'بلندترین سازه بشری: ۲۱٬۰۰۰ کیلومتر طول',
+      storyBeat: 'The longest man-made structure: 21,000 kilometers',
       musicMood: 'Asian Epic',
       factCards: [
         {
           timestamp: 15,
           type: 'statistic',
-          content: '🏯 ساخت: ۲۷۰۰ سال پیش تا ۴۰۰ سال پیش',
+          content: '🏯 Built: From 2,700 to 400 years ago',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -645,7 +645,7 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'fact',
-          content: '👷 میلیون‌ها کارگر در ساخت آن شرکت کردند',
+          content: '👷 Millions of workers participated in its construction',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -655,17 +655,17 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
     },
     {
       id: 2,
-      title: 'مجسمه مسیح نجات‌دهنده',
+      title: 'Christ the Redeemer',
       duration: 65,
       pieceCount: 400,
       imagePrompt: 'Christ the Redeemer statue Rio de Janeiro, sunset, dramatic clouds, iconic pose, breathtaking',
-      storyBeat: 'ریو دوژانیرو، برزیل: نماد امید و آغوش باز',
+      storyBeat: 'Rio de Janeiro, Brazil: A symbol of hope and open arms',
       musicMood: 'Latin Spirit',
       factCards: [
         {
           timestamp: 15,
           type: 'statistic',
-          content: '🗿 ارتفاع: ۳۰ متر | وزن: ۶۳۵ تن',
+          content: '🗿 Height: 30 meters | Weight: 635 tons',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -673,7 +673,7 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
         {
           timestamp: 45,
           type: 'fact',
-          content: '⚡ رعد و برق سالانه چندین بار به آن اصابت می‌کند',
+          content: '⚡ Lightning strikes it several times a year',
           duration: 5,
           position: 'bottom',
           animation: 'slide',
@@ -683,17 +683,17 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
     },
     {
       id: 3,
-      title: 'ماچو پیچو',
+      title: 'Machu Picchu',
       duration: 85,
       pieceCount: 700,
       imagePrompt: 'Machu Picchu ancient Inca citadel in clouds, mountain peaks, mystical atmosphere, UNESCO heritage',
-      storyBeat: 'شهر گمشده اینکاها در ارتفاع ۲٬۴۳۰ متری',
+      storyBeat: 'The Lost City of the Incas at 2,430 meters elevation',
       musicMood: 'Andean Mystery',
       factCards: [
         {
           timestamp: 20,
           type: 'fact',
-          content: '🏔️ ساخته شده در قرن ۱۵ میلادی',
+          content: '🏔️ Built in the 15th century AD',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -701,7 +701,7 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'question',
-          content: '❓ چگونه اینکاها سنگ‌های عظیم را جابجا کردند؟',
+          content: '❓ How did the Incas move such massive stones?',
           duration: 4,
           position: 'center',
           animation: 'pop',
@@ -711,17 +711,17 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
     },
     {
       id: 4,
-      title: 'کولوسئوم رم',
+      title: 'The Colosseum of Rome',
       duration: 80,
       pieceCount: 600,
       imagePrompt: 'Colosseum Rome at golden hour, ancient amphitheater, gladiator arena, historical marvel',
-      storyBeat: 'آمفی‌تئاتر باشکوه روم: شاهد نبردهای گلادیاتورها',
+      storyBeat: 'Rome\'s magnificent amphitheater: Witness to gladiator battles',
       musicMood: 'Roman Glory',
       factCards: [
         {
           timestamp: 15,
           type: 'statistic',
-          content: '🏛️ ظرفیت: ۵۰٬۰۰۰ تماشاگر',
+          content: '🏛️ Capacity: 50,000 spectators',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -729,7 +729,7 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
         {
           timestamp: 55,
           type: 'fact',
-          content: '⚔️ نبردهای دریایی نیز در اینجا برگزار می‌شد',
+          content: '⚔️ Naval battles were also held here',
           duration: 5,
           position: 'bottom',
           animation: 'slide',
@@ -739,17 +739,17 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
     },
     {
       id: 5,
-      title: 'تاج محل',
+      title: 'The Taj Mahal',
       duration: 80,
       pieceCount: 650,
       imagePrompt: 'Taj Mahal at dawn, white marble reflecting in pool, symmetrical beauty, Islamic architecture masterpiece',
-      storyBeat: 'آرامگاه عشق: شاهکار معماری اسلامی هند',
+      storyBeat: 'A tomb of love: A masterpiece of Indian Islamic architecture',
       musicMood: 'Indian Serenity',
       factCards: [
         {
           timestamp: 20,
           type: 'quote',
-          content: '"سنگ مرمری که عشق را روایت می‌کند"',
+          content: '"Marble that tells a story of love"',
           duration: 4,
           position: 'center',
           animation: 'fade',
@@ -757,7 +757,7 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'statistic',
-          content: '💎 ۲۲ سال ساخت | ۲۰٬۰۰۰ کارگر',
+          content: '💎 22 years to build | 20,000 workers',
           duration: 4,
           position: 'top',
           animation: 'slide',
@@ -767,17 +767,17 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
     },
     {
       id: 6,
-      title: 'چیچن ایتزا',
+      title: 'Chichen Itza',
       duration: 70,
       pieceCount: 550,
       imagePrompt: 'Chichen Itza El Castillo pyramid Mexico, Maya calendar temple, archaeological wonder, dramatic sky',
-      storyBeat: 'هرم کوکولکان: تقویم خورشیدی مایاها',
+      storyBeat: 'The Pyramid of Kukulcan: The Mayan solar calendar',
       musicMood: 'Maya Wonder',
       factCards: [
         {
           timestamp: 15,
           type: 'fact',
-          content: '🔺 ۹۱ پله در هر طرف + یک پله بالا = ۳۶۵ روز',
+          content: '🔺 91 steps on each side + 1 top step = 365 days',
           duration: 5,
           position: 'top',
           animation: 'pop',
@@ -785,7 +785,7 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'statistic',
-          content: '🌅 در اعتدال بهاری، سایه مار ظاهر می‌شود',
+          content: '🌅 At the spring equinox, a snake shadow appears',
           duration: 5,
           position: 'bottom',
           animation: 'slide',
@@ -795,17 +795,17 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
     },
     {
       id: 7,
-      title: 'پترا',
+      title: 'Petra',
       duration: 70,
       pieceCount: 500,
       imagePrompt: 'Petra Jordan, Al-Khazneh treasury carved in red rock, ancient Nabataean city, rose-red city',
-      storyBeat: 'شهر صخره‌ای: پایتخت نباتی‌ها در قلب صحرا',
+      storyBeat: 'The Rock City: Capital of the Nabataeans in the heart of the desert',
       musicMood: 'Desert Majesty',
       factCards: [
         {
           timestamp: 15,
           type: 'fact',
-          content: '🏜️ کشف مجدد در سال ۱۸۱۲ میلادی',
+          content: '🏜️ Rediscovered in 1812',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -813,7 +813,7 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'quote',
-          content: '"شهری گلرنگ، به قدمت نیمی از زمان" - شعر انگلیسی',
+          content: '"A rose-red city half as old as time" - English poem',
           duration: 5,
           position: 'center',
           animation: 'fade',
@@ -848,27 +848,27 @@ export const createGeographicJourneyTemplate = (): LongFormStructure => ({
 
 /**
  * 5. Art Evolution Template
- * مثال: تاریخ نقاشی از غارها تا دیجیتال
+ * Example: History of Painting from Caves to Digital
  */
 export const createArtEvolutionTemplate = (): LongFormStructure => ({
   genre: LongFormGenre.ART_EVOLUTION,
   totalDuration: 8,
-  title: 'تکامل هنر نقاشی: از غارهای باستان تا آرت دیجیتال',
-  description: 'سفری ۴۰٬۰۰۰ ساله در تاریخ نقاشی بشر',
+  title: 'Evolution of Painting: From Ancient Caves to Digital Art',
+  description: 'A 40,000-year journey through the history of human painting',
   scenes: [
     {
       id: 1,
-      title: 'نقاشی‌های غار',
+      title: 'Cave Paintings',
       duration: 70,
       pieceCount: 400,
       imagePrompt: 'Cave painting prehistoric art, bison and horses on rock wall, Lascaux style, ancient humanity',
-      storyBeat: '۴۰٬۰۰۰ سال پیش: نخستین هنرمندان انسان',
+      storyBeat: '40,000 years ago: The first human artists',
       musicMood: 'Primal Drums',
       factCards: [
         {
           timestamp: 15,
           type: 'statistic',
-          content: '🦬 غار لاسکو: ۱۷٬۰۰۰ سال قدمت',
+          content: '🦬 Lascaux Cave: 17,000 years old',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -876,7 +876,7 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'fact',
-          content: '🎨 رنگدانه‌ها: اکسید آهن، ذغال، گچ',
+          content: '🎨 Pigments: Iron oxide, charcoal, chalk',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -886,17 +886,17 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
     },
     {
       id: 2,
-      title: 'هنر مصر باستان',
+      title: 'Ancient Egyptian Art',
       duration: 80,
       pieceCount: 600,
       imagePrompt: 'Ancient Egyptian art, hieroglyphics, profile figures, papyrus paintings, golden age, detailed',
-      storyBeat: 'مصر باستان: هنر برای ابدیت',
+      storyBeat: 'Ancient Egypt: Art for eternity',
       musicMood: 'Egyptian Mystique',
       factCards: [
         {
           timestamp: 20,
           type: 'fact',
-          content: '👁️ قانون نمایش رو به جلو: چهره نیمرخ، چشم رو به رو',
+          content: '👁️ Frontality rule: Profile face, front-facing eye',
           duration: 5,
           position: 'top',
           animation: 'fade',
@@ -904,7 +904,7 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'statistic',
-          content: '📜 هنر مصری ۳٬۰۰۰ سال تقریباً بدون تغییر ماند',
+          content: '📜 Egyptian art remained almost unchanged for 3,000 years',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -914,17 +914,17 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
     },
     {
       id: 3,
-      title: 'رنسانس: انقلاب هنر',
+      title: 'Renaissance: The Art Revolution',
       duration: 100,
       pieceCount: 800,
       imagePrompt: 'Renaissance masterpiece, Mona Lisa style, sfumato technique, Leonardo da Vinci quality, realistic portrait',
-      storyBeat: 'قرن ۱۵-۱۶: بازگشت به واقع‌گرایی و انسان‌محوری',
+      storyBeat: '15th-16th century: Return to realism and humanism',
       musicMood: 'Renaissance Beauty',
       factCards: [
         {
           timestamp: 25,
           type: 'quote',
-          content: '"هنر علم قابل دیدن است" - لئوناردو داوینچی',
+          content: '"Art is science made visible" - Leonardo da Vinci',
           duration: 5,
           position: 'center',
           animation: 'fade',
@@ -932,7 +932,7 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
         {
           timestamp: 70,
           type: 'fact',
-          content: '🎨 نوآوری: پرسپکتیو، نورپردازی، آناتومی دقیق',
+          content: '🎨 Innovation: Perspective, lighting, precise anatomy',
           duration: 5,
           position: 'top',
           animation: 'slide',
@@ -942,17 +942,17 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
     },
     {
       id: 4,
-      title: 'امپرسیونیسم: لحظه را بگیر',
+      title: 'Impressionism: Capture the Moment',
       duration: 90,
       pieceCount: 700,
       imagePrompt: 'Impressionist painting, water lilies, broken brushstrokes, light and color, Monet style, dreamy',
-      storyBeat: 'قرن ۱۹: هنرمندان به خارج از استودیو رفتند',
+      storyBeat: '19th century: Artists went outdoors',
       musicMood: 'French Impressionism',
       factCards: [
         {
           timestamp: 20,
           type: 'fact',
-          content: '🌅 کلود مونه: ۲۵۰ نقاشی از نیلوفرهای آبی',
+          content: '🌅 Claude Monet: 250 paintings of water lilies',
           duration: 5,
           position: 'top',
           animation: 'fade',
@@ -960,7 +960,7 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
         {
           timestamp: 65,
           type: 'statistic',
-          content: '🎨 تکنیک: ضربه‌های قلم مو ظاهر، رنگ خالص',
+          content: '🎨 Technique: Visible brushstrokes, pure color',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -970,17 +970,17 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
     },
     {
       id: 5,
-      title: 'کوبیسم: واقعیت شکسته',
+      title: 'Cubism: Shattered Reality',
       duration: 80,
       pieceCount: 600,
       imagePrompt: 'Cubist painting, geometric shapes, multiple perspectives, Picasso style, abstract fragmented reality',
-      storyBeat: 'قرن ۲۰: پیکاسو و براک واقعیت را شکستند',
+      storyBeat: '20th century: Picasso and Braque shattered reality',
       musicMood: 'Modern Jazz',
       factCards: [
         {
           timestamp: 15,
           type: 'question',
-          content: '❓ چرا چندین دیدگاه را در یک نقاشی نشان دهیم؟',
+          content: '❓ Why show multiple viewpoints in one painting?',
           duration: 4,
           position: 'center',
           animation: 'pop',
@@ -988,7 +988,7 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
         {
           timestamp: 55,
           type: 'fact',
-          content: '🎨 پیکاسو: "هنر دروغی است که حقیقت را نشان می‌دهد"',
+          content: '🎨 Picasso: "Art is a lie that tells the truth"',
           duration: 5,
           position: 'top',
           animation: 'fade',
@@ -998,17 +998,17 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
     },
     {
       id: 6,
-      title: 'هنر آبستره: آزادی مطلق',
+      title: 'Abstract Art: Absolute Freedom',
       duration: 70,
       pieceCount: 500,
       imagePrompt: 'Abstract expressionism, Jackson Pollock drip painting, color explosion, emotional chaos, pure emotion',
-      storyBeat: '۱۹۵۰: هنر بدون موضوع، فقط احساس',
+      storyBeat: '1950: Art without subject, only feeling',
       musicMood: 'Avant-garde',
       factCards: [
         {
           timestamp: 15,
           type: 'fact',
-          content: '🎨 جکسون پولاک: تکنیک قطره‌چکانی',
+          content: '🎨 Jackson Pollock: Drip technique',
           duration: 4,
           position: 'top',
           animation: 'slide',
@@ -1016,7 +1016,7 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'quote',
-          content: '"وقتی در نقاشی هستم، از آنچه می‌کنم آگاه نیستم"',
+          content: '"When I am in my painting, I am not aware of what I am doing"',
           duration: 5,
           position: 'center',
           animation: 'fade',
@@ -1026,17 +1026,17 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
     },
     {
       id: 7,
-      title: 'آرت دیجیتال: مرز جدید',
+      title: 'Digital Art: The New Frontier',
       duration: 70,
       pieceCount: 900,
       imagePrompt: 'Digital art NFT, futuristic artwork, AI-generated art, glitch art, cyberpunk aesthetic, modern technology',
-      storyBeat: 'قرن ۲۱: هنر در دنیای دیجیتال و NFT',
+      storyBeat: '21st century: Art in the digital world and NFTs',
       musicMood: 'Electronic Future',
       factCards: [
         {
           timestamp: 15,
           type: 'statistic',
-          content: '💰 اولین NFT: فروخته شده به قیمت ۶۹ میلیون دلار',
+          content: '💰 First major NFT: Sold for $69 million',
           duration: 5,
           position: 'top',
           animation: 'pop',
@@ -1044,7 +1044,7 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'fact',
-          content: '🤖 هوش مصنوعی اکنون می‌تواند هنر خلق کند',
+          content: '🤖 AI can now create art',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -1079,27 +1079,27 @@ export const createArtEvolutionTemplate = (): LongFormStructure => ({
 
 /**
  * 6. Life Cycle Story Template
- * مثال: چرخه حیات یک ستاره
+ * Example: Life and Death of a Star
  */
 export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
   genre: LongFormGenre.LIFE_CYCLE_STORY,
   totalDuration: 8,
-  title: 'زندگی و مرگ یک ستاره',
-  description: 'از تولد تا فروپاشی: سفری میلیارد ساله',
+  title: 'Life and Death of a Star',
+  description: 'From birth to collapse: A billion-year journey',
   scenes: [
     {
       id: 1,
-      title: 'ابر مولکولی: آغاز',
+      title: 'Molecular Cloud: The Beginning',
       duration: 70,
       pieceCount: 500,
       imagePrompt: 'Molecular cloud nebula, stellar nursery, gas and dust collapsing, birth of stars, cosmic beauty',
-      storyBeat: 'در قلب ابرهای عظیم گاز و غبار، ستاره‌ها متولد می‌شوند',
+      storyBeat: 'In the heart of vast clouds of gas and dust, stars are born',
       musicMood: 'Cosmic Genesis',
       factCards: [
         {
           timestamp: 15,
           type: 'statistic',
-          content: '☁️ دمای ابر: منفی ۲۶۰ درجه سانتیگراد',
+          content: '☁️ Cloud temperature: -260 degrees Celsius',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -1107,7 +1107,7 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'fact',
-          content: '⚛️ گرانش باعث فروپاشی ابر می‌شود',
+          content: '⚛️ Gravity causes the cloud to collapse',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -1117,17 +1117,17 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
     },
     {
       id: 2,
-      title: 'پروتوستاره: نوزاد ستاره‌ای',
+      title: 'Protostar: Stellar Infant',
       duration: 80,
       pieceCount: 600,
       imagePrompt: 'Protostar forming, accretion disk, stellar evolution, glowing core, nascent star',
-      storyBeat: 'فشار و حرارت افزایش می‌یابد، یک ستاره نوپا شکل می‌گیرد',
+      storyBeat: 'Pressure and heat increase, a young star takes shape',
       musicMood: 'Building Energy',
       factCards: [
         {
           timestamp: 20,
           type: 'fact',
-          content: '🌡️ دمای هسته: چندین میلیون درجه',
+          content: '🌡️ Core temperature: Several million degrees',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -1135,7 +1135,7 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'statistic',
-          content: '⏱️ مرحله پروتوستاره: ۱۰۰٬۰۰۰ سال',
+          content: '⏱️ Protostar phase: 100,000 years',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -1145,17 +1145,17 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
     },
     {
       id: 3,
-      title: 'دنباله اصلی: جوانی',
+      title: 'Main Sequence: Youth',
       duration: 90,
       pieceCount: 700,
       imagePrompt: 'Main sequence star, hydrogen fusion, stable energy output, our sun analog, radiant beauty',
-      storyBeat: 'واکنش هسته‌ای آغاز می‌شود: هیدروژن به هلیوم تبدیل می‌شود',
+      storyBeat: 'Nuclear reaction begins: Hydrogen converts to helium',
       musicMood: 'Stable Glory',
       factCards: [
         {
           timestamp: 25,
           type: 'statistic',
-          content: '☀️ خورشید ما در این مرحله است (۴.۶ میلیارد سال)',
+          content: '☀️ Our Sun is in this phase (4.6 billion years old)',
           duration: 5,
           position: 'center',
           animation: 'pop',
@@ -1163,7 +1163,7 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
         {
           timestamp: 70,
           type: 'fact',
-          content: '⚡ در هر ثانیه ۶۰۰ میلیون تن هیدروژن می‌سوزد',
+          content: '⚡ 600 million tons of hydrogen burn every second',
           duration: 5,
           position: 'top',
           animation: 'slide',
@@ -1173,17 +1173,17 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
     },
     {
       id: 4,
-      title: 'غول سرخ: پیری',
+      title: 'Red Giant: Old Age',
       duration: 90,
       pieceCount: 800,
       imagePrompt: 'Red giant star expanding, engulfing planets, helium fusion, dying star, dramatic transformation',
-      storyBeat: 'هیدروژن تمام می‌شود، ستاره منبسط می‌شود',
+      storyBeat: 'Hydrogen runs out, the star expands',
       musicMood: 'Melancholic Expansion',
       factCards: [
         {
           timestamp: 20,
           type: 'fact',
-          content: '🔴 قطر ستاره ۱۰۰ برابر می‌شود',
+          content: '🔴 The star\'s diameter grows 100 times',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -1191,7 +1191,7 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'statistic',
-          content: '🌍 خورشید در ۵ میلیارد سال زمین را خواهد بلعید',
+          content: '🌍 In 5 billion years, the Sun will engulf Earth',
           duration: 5,
           position: 'bottom',
           animation: 'slide',
@@ -1201,17 +1201,17 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
     },
     {
       id: 5,
-      title: 'سحابی سیاره‌ای: نفس آخر',
+      title: 'Planetary Nebula: Last Breath',
       duration: 80,
       pieceCount: 600,
       imagePrompt: 'Planetary nebula, expelled outer layers, glowing gases, beautiful death, cosmic artwork',
-      storyBeat: 'لایه‌های بیرونی ستاره پرتاب می‌شوند',
+      storyBeat: 'The star\'s outer layers are ejected',
       musicMood: 'Ethereal Beauty',
       factCards: [
         {
           timestamp: 15,
           type: 'fact',
-          content: '💨 سرعت گازها: ۱۰۰٬۰۰۰ کیلومتر در ساعت',
+          content: '💨 Gas speed: 100,000 km per hour',
           duration: 5,
           position: 'top',
           animation: 'slide',
@@ -1219,7 +1219,7 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'quote',
-          content: '"زیباترین مرگ در کیهان"',
+          content: '"The most beautiful death in the cosmos"',
           duration: 4,
           position: 'center',
           animation: 'fade',
@@ -1229,17 +1229,17 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
     },
     {
       id: 6,
-      title: 'کوتوله سفید: خاکستر',
+      title: 'White Dwarf: Ashes',
       duration: 70,
       pieceCount: 500,
       imagePrompt: 'White dwarf star, dense remnant core, cooling ember, end stage, cosmic graveyard',
-      storyBeat: 'هسته فشرده باقی می‌ماند: چگالی شگفت‌انگیز',
+      storyBeat: 'The compressed core remains: Incredible density',
       musicMood: 'Final Silence',
       factCards: [
         {
           timestamp: 15,
           type: 'statistic',
-          content: '💎 چگالی: ۱ قاشق چای‌خوری = ۵ تن',
+          content: '💎 Density: 1 teaspoon = 5 tons',
           duration: 5,
           position: 'top',
           animation: 'pop',
@@ -1247,7 +1247,7 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'fact',
-          content: '❄️ طی تریلیون‌ها سال سرد می‌شود',
+          content: '❄️ Cools over trillions of years',
           duration: 4,
           position: 'bottom',
           animation: 'fade',
@@ -1281,27 +1281,27 @@ export const createLifeCycleStoryTemplate = (): LongFormStructure => ({
 
 /**
  * 7. Construction Timelapse Template
- * مثال: ساخت برج ایفل
+ * Example: Building the Eiffel Tower
  */
 export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
   genre: LongFormGenre.CONSTRUCTION_TIMELAPSE,
   totalDuration: 8,
-  title: 'ساخت برج ایفل: از نقشه تا نماد',
-  description: 'روایت ساخت یکی از مشهورترین سازه‌های جهان',
+  title: 'Building the Eiffel Tower: From Blueprint to Icon',
+  description: 'The story of building one of the world\'s most famous structures',
   scenes: [
     {
       id: 1,
-      title: 'طراحی: رویای گوستاو',
+      title: 'Design: Gustave\'s Dream',
       duration: 70,
       pieceCount: 400,
       imagePrompt: 'Gustave Eiffel with tower blueprints, 19th century Paris, technical drawings, engineering genius',
-      storyBeat: '۱۸۸۴: گوستاو ایفل طرح برجی ۳۰۰ متری ارائه می‌دهد',
+      storyBeat: '1884: Gustave Eiffel presents a design for a 300-meter tower',
       musicMood: 'Industrial Dream',
       factCards: [
         {
           timestamp: 15,
           type: 'fact',
-          content: '📐 ارتفاع برنامه‌ریزی شده: ۳۰۰ متر',
+          content: '📐 Planned height: 300 meters',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -1309,7 +1309,7 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'statistic',
-          content: '💰 بودجه: ۶.۵ میلیون فرانک طلا',
+          content: '💰 Budget: 6.5 million gold francs',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -1319,17 +1319,17 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
     },
     {
       id: 2,
-      title: 'مخالفت‌ها: نبرد هنرمندان',
+      title: 'Opposition: Battle of the Artists',
       duration: 60,
       pieceCount: 350,
       imagePrompt: 'Parisian artists protesting Eiffel Tower, 1887 Paris, controversy, newspapers, public outcry',
-      storyBeat: '۳۰۰ هنرمند علیه برج اعتراض کردند',
+      storyBeat: '300 artists protested against the tower',
       musicMood: 'Controversy',
       factCards: [
         {
           timestamp: 15,
           type: 'quote',
-          content: '"برجی زشت که پاریس را خراب می‌کند" - هنرمندان',
+          content: '"An ugly tower that will ruin Paris" - Artists',
           duration: 5,
           position: 'center',
           animation: 'pop',
@@ -1337,7 +1337,7 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
         {
           timestamp: 45,
           type: 'fact',
-          content: '📰 نامه اعتراضی در روزنامه‌ها منتشر شد',
+          content: '📰 Protest letter published in newspapers',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -1347,17 +1347,17 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
     },
     {
       id: 3,
-      title: 'پایه‌ها: شالوده عظیم',
+      title: 'Foundations: Massive Base',
       duration: 90,
       pieceCount: 700,
       imagePrompt: 'Eiffel Tower foundation construction, workers, scaffolding, concrete base, 1887, industrial revolution',
-      storyBeat: 'ژانویه ۱۸۸۷: ساخت پایه‌ها آغاز شد',
+      storyBeat: 'January 1887: Foundation construction began',
       musicMood: 'Heavy Industry',
       factCards: [
         {
           timestamp: 20,
           type: 'statistic',
-          content: '🏗️ عمق پایه‌ها: ۱۵ متر زیر زمین',
+          content: '🏗️ Foundation depth: 15 meters underground',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -1365,7 +1365,7 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
         {
           timestamp: 65,
           type: 'fact',
-          content: '👷 ۳۰۰ کارگر همزمان کار می‌کردند',
+          content: '👷 300 workers worked simultaneously',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -1375,17 +1375,17 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
     },
     {
       id: 4,
-      title: 'ساختار فلزی: صعود به آسمان',
+      title: 'Iron Framework: Rising to the Sky',
       duration: 100,
       pieceCount: 900,
       imagePrompt: 'Eiffel Tower mid-construction iron framework, workers on beams, 1888, dangerous heights, industrial marvel',
-      storyBeat: '۱۸٬۰۰۰ قطعه فلزی سازه را شکل می‌دهند',
+      storyBeat: '18,000 metal pieces form the structure',
       musicMood: 'Building Upward',
       factCards: [
         {
           timestamp: 25,
           type: 'statistic',
-          content: '🔩 ۲.۵ میلیون پرچ برای اتصال قطعات',
+          content: '🔩 2.5 million rivets connect the pieces',
           duration: 5,
           position: 'top',
           animation: 'slide',
@@ -1393,7 +1393,7 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
         {
           timestamp: 75,
           type: 'fact',
-          content: '⚠️ فقط ۱ کارگر جان خود را از دست داد (رکورد ایمنی)',
+          content: '⚠️ Only 1 worker died (safety record)',
           duration: 5,
           position: 'bottom',
           animation: 'fade',
@@ -1403,17 +1403,17 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
     },
     {
       id: 5,
-      title: 'تکمیل: نماد پاریس',
+      title: 'Completion: Symbol of Paris',
       duration: 80,
       pieceCount: 600,
       imagePrompt: 'Completed Eiffel Tower 1889, World Fair Paris, French flag on top, celebration, iconic landmark',
-      storyBeat: 'مارس ۱۸۸۹: برج تکمیل شد - ۲ سال و ۲ ماه کار',
+      storyBeat: 'March 1889: Tower completed - 2 years and 2 months of work',
       musicMood: 'Triumphant Victory',
       factCards: [
         {
           timestamp: 20,
           type: 'statistic',
-          content: '🎉 افتتاح در نمایشگاه جهانی ۱۸۸۹',
+          content: '🎉 Opened for the 1889 World\'s Fair',
           duration: 4,
           position: 'top',
           animation: 'pop',
@@ -1421,7 +1421,7 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'fact',
-          content: '👑 بلندترین ساختمان جهان تا سال ۱۹۳۰',
+          content: '👑 Tallest building in the world until 1930',
           duration: 5,
           position: 'center',
           animation: 'fade',
@@ -1431,17 +1431,17 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
     },
     {
       id: 6,
-      title: 'میراث: ۱۳۴ سال بعد',
+      title: 'Legacy: 134 Years Later',
       duration: 70,
       pieceCount: 500,
       imagePrompt: 'Modern Eiffel Tower at night, illuminated, tourists, Paris skyline, timeless icon, celebration',
-      storyBeat: 'امروز: محبوب‌ترین بنای جهان با ۷ میلیون بازدیدکننده سالانه',
+      storyBeat: 'Today: The world\'s most beloved landmark with 7 million annual visitors',
       musicMood: 'Eternal Glory',
       factCards: [
         {
           timestamp: 15,
           type: 'statistic',
-          content: '🎫 ۳۰۰ میلیون بازدیدکننده در ۱۳۴ سال',
+          content: '🎫 300 million visitors in 134 years',
           duration: 5,
           position: 'top',
           animation: 'slide',
@@ -1449,7 +1449,7 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'quote',
-          content: '"پاریس بدون برج ایفل، پاریس نیست"',
+          content: '"Paris without the Eiffel Tower is not Paris"',
           duration: 4,
           position: 'center',
           animation: 'fade',
@@ -1483,27 +1483,27 @@ export const createConstructionTimelapseTemplate = (): LongFormStructure => ({
 
 /**
  * 8. Story Arc Template
- * مثال: داستان شاه آرتور
+ * Example: The Legend of King Arthur
  */
 export const createStoryArcTemplate = (): LongFormStructure => ({
   genre: LongFormGenre.STORY_ARC,
   totalDuration: 8,
-  title: 'افسانه شاه آرتور: شمشیر و جادو',
-  description: 'داستان افسانه‌ای پادشاه بریتانیا، شمشیر اکسکالیبر، و شوالیه‌های میز گرد',
+  title: 'The Legend of King Arthur: Sword and Sorcery',
+  description: 'The legendary tale of Britain\'s king, the sword Excalibur, and the Knights of the Round Table',
   scenes: [
     {
       id: 1,
-      title: 'پسر بی‌نام',
+      title: 'The Nameless Boy',
       duration: 70,
       pieceCount: 400,
       imagePrompt: 'Young Arthur pulling sword from stone, medieval England, Excalibur legend, destiny moment, cinematic',
-      storyBeat: 'پسری یتیم شمشیری از سنگ بیرون می‌کشد',
+      storyBeat: 'An orphan boy pulls a sword from a stone',
       musicMood: 'Mysterious Origins',
       factCards: [
         {
           timestamp: 15,
           type: 'quote',
-          content: '"هر که این شمشیر را بیرون کشد، پادشاه حق است"',
+          content: '"Whoso pulleth out this sword is rightwise king"',
           duration: 5,
           position: 'center',
           animation: 'fade',
@@ -1511,7 +1511,7 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'fact',
-          content: '⚔️ اکسکالیبر: شمشیر جادویی با قدرت افسانه‌ای',
+          content: '⚔️ Excalibur: A magical sword with legendary power',
           duration: 4,
           position: 'top',
           animation: 'slide',
@@ -1521,17 +1521,17 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
     },
     {
       id: 2,
-      title: 'پادشاه جوان',
+      title: 'The Young King',
       duration: 80,
       pieceCount: 600,
       imagePrompt: 'King Arthur crowned, Camelot castle, knights gathering, medieval coronation, majestic kingdom',
-      storyBeat: 'آرتور پادشاه می‌شود و کاملوت را بنا می‌نهد',
+      storyBeat: 'Arthur becomes king and builds Camelot',
       musicMood: 'Royal Triumph',
       factCards: [
         {
           timestamp: 20,
           type: 'fact',
-          content: '🏰 کاملوت: پایتخت افسانه‌ای پادشاهی آرتور',
+          content: '🏰 Camelot: The legendary capital of Arthur\'s kingdom',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -1539,7 +1539,7 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'statistic',
-          content: '⚔️ مرلین جادوگر: مشاور و محافظ آرتور',
+          content: '⚔️ Merlin the Wizard: Arthur\'s advisor and protector',
           duration: 4,
           position: 'bottom',
           animation: 'slide',
@@ -1549,17 +1549,17 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
     },
     {
       id: 3,
-      title: 'میز گرد',
+      title: 'The Round Table',
       duration: 90,
       pieceCount: 700,
       imagePrompt: 'Knights of the Round Table, medieval great hall, chivalry oath, brotherhood, legendary warriors',
-      storyBeat: 'شوالیه‌های میز گرد: برادری برابر',
+      storyBeat: 'Knights of the Round Table: A brotherhood of equals',
       musicMood: 'Brotherhood Epic',
       factCards: [
         {
           timestamp: 25,
           type: 'fact',
-          content: '🛡️ لنسلوت: شجاع‌ترین شوالیه',
+          content: '🛡️ Lancelot: The bravest knight',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -1567,7 +1567,7 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
         {
           timestamp: 70,
           type: 'quote',
-          content: '"در میز گرد، همه برابرند"',
+          content: '"At the Round Table, all are equal"',
           duration: 4,
           position: 'center',
           animation: 'pop',
@@ -1577,17 +1577,17 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
     },
     {
       id: 4,
-      title: 'جستجوی جام مقدس',
+      title: 'Quest for the Holy Grail',
       duration: 90,
       pieceCount: 800,
       imagePrompt: 'Quest for Holy Grail, knights on adventure, mystical forest, medieval quest, divine light',
-      storyBeat: 'جستجوی جام مقدس: مأموریت الهی',
+      storyBeat: 'The search for the Holy Grail: A divine mission',
       musicMood: 'Mystical Quest',
       factCards: [
         {
           timestamp: 20,
           type: 'fact',
-          content: '🏆 جام مقدس: جامی که قدرت شفا می‌بخشد',
+          content: '🏆 The Holy Grail: A cup with healing power',
           duration: 5,
           position: 'top',
           animation: 'slide',
@@ -1595,7 +1595,7 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
         {
           timestamp: 65,
           type: 'question',
-          content: '❓ کدام شوالیه جام را خواهد یافت؟',
+          content: '❓ Which knight will find the Grail?',
           duration: 4,
           position: 'center',
           animation: 'pop',
@@ -1605,17 +1605,17 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
     },
     {
       id: 5,
-      title: 'خیانت',
+      title: 'Betrayal',
       duration: 80,
       pieceCount: 600,
       imagePrompt: 'Betrayal at Camelot, Lancelot and Guinevere tragic romance, kingdom falling apart, dark atmosphere',
-      storyBeat: 'لنسلوت و گینِوِر: عشقی که پادشاهی را ویران کرد',
+      storyBeat: 'Lancelot and Guinevere: A love that destroyed a kingdom',
       musicMood: 'Tragic Betrayal',
       factCards: [
         {
           timestamp: 15,
           type: 'fact',
-          content: '💔 گینِوِر: ملکه‌ای میان دو عشق',
+          content: '💔 Guinevere: A queen torn between two loves',
           duration: 5,
           position: 'center',
           animation: 'fade',
@@ -1623,7 +1623,7 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
         {
           timestamp: 60,
           type: 'quote',
-          content: '"حتی بزرگ‌ترین پادشاهی‌ها از درون فرو می‌ریزند"',
+          content: '"Even the greatest kingdoms fall from within"',
           duration: 5,
           position: 'top',
           animation: 'slide',
@@ -1633,17 +1633,17 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
     },
     {
       id: 6,
-      title: 'نبرد نهایی',
+      title: 'The Final Battle',
       duration: 90,
       pieceCount: 900,
       imagePrompt: 'Battle of Camlann, Arthur vs Mordred, epic medieval battlefield, tragic final battle, dramatic sky',
-      storyBeat: 'نبرد کملان: پدر علیه پسر',
+      storyBeat: 'Battle of Camlann: Father against son',
       musicMood: 'Epic Battle',
       factCards: [
         {
           timestamp: 20,
           type: 'fact',
-          content: '⚔️ موردرد: پسر خائن آرتور',
+          content: '⚔️ Mordred: Arthur\'s treacherous son',
           duration: 4,
           position: 'top',
           animation: 'fade',
@@ -1651,7 +1651,7 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
         {
           timestamp: 70,
           type: 'statistic',
-          content: '💀 هر دو در نبرد کشته می‌شوند',
+          content: '💀 Both perish in battle',
           duration: 5,
           position: 'center',
           animation: 'pop',
@@ -1661,17 +1661,17 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
     },
     {
       id: 7,
-      title: 'افسانه جاودان',
+      title: 'Eternal Legend',
       duration: 70,
       pieceCount: 500,
       imagePrompt: 'Lady of the Lake retrieving Excalibur, mystical Avalon, Arthur immortal legend, magical farewell',
-      storyBeat: 'آرتور به آوالون می‌رود، اما افسانه باقی می‌ماند',
+      storyBeat: 'Arthur goes to Avalon, but the legend lives on',
       musicMood: 'Eternal Legend',
       factCards: [
         {
           timestamp: 15,
           type: 'quote',
-          content: '"پادشاهی که بود و خواهد بود"',
+          content: '"The Once and Future King"',
           duration: 5,
           position: 'center',
           animation: 'fade',
@@ -1679,7 +1679,7 @@ export const createStoryArcTemplate = (): LongFormStructure => ({
         {
           timestamp: 50,
           type: 'fact',
-          content: '🗡️ اکسکالیبر به دریاچه بازگردانده شد',
+          content: '🗡️ Excalibur was returned to the lake',
           duration: 4,
           position: 'bottom',
           animation: 'slide',

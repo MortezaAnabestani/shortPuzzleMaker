@@ -19,51 +19,51 @@ const GENRE_INFO: Record<
 > = {
   [LongFormGenre.HISTORICAL_RECONSTRUCTION]: {
     emoji: '🏛️',
-    label: 'بازسازی تاریخی',
-    description: 'بازسازی رویدادهای تاریخی مهم گام به گام',
-    example: 'مثال: سقوط امپراتوری روم، جنگ جهانی دوم',
+    label: 'Historical Reconstruction',
+    description: 'Step-by-step recreation of major historical events',
+    example: 'e.g., Fall of the Roman Empire, World War II',
   },
   [LongFormGenre.SCIENTIFIC_DEEPDIVE]: {
     emoji: '🔬',
-    label: 'کاوش علمی عمیق',
-    description: 'توضیح پدیده‌های علمی پیچیده با visualization',
-    example: 'مثال: از کهکشان تا DNA، تکامل جهان',
+    label: 'Scientific Deep-Dive',
+    description: 'Explaining complex scientific phenomena with visualization',
+    example: 'e.g., From Galaxy to DNA, Evolution of the Universe',
   },
   [LongFormGenre.GEOGRAPHIC_JOURNEY]: {
     emoji: '🌍',
-    label: 'سفر جغرافیایی',
-    description: 'سفر مجازی به مکان‌های دیدنی دنیا',
-    example: 'مثال: عجایب هفتگانه، مکان‌های مخفی',
+    label: 'Geographic Journey',
+    description: 'Virtual travel to stunning locations around the world',
+    example: 'e.g., Seven Wonders, Hidden Places',
   },
   [LongFormGenre.ART_EVOLUTION]: {
     emoji: '🎨',
-    label: 'تکامل هنر',
-    description: 'تاریخ هنر از آغاز تا امروز',
-    example: 'مثال: تکامل نقاشی، معماری عظیم',
+    label: 'Art Evolution',
+    description: 'History of art from the beginning to today',
+    example: 'e.g., Evolution of Painting, Grand Architecture',
   },
   [LongFormGenre.LIFE_CYCLE_STORY]: {
     emoji: '🧬',
-    label: 'چرخه حیات',
-    description: 'داستان تولد، رشد، مرگ یک موجود',
-    example: 'مثال: چرخه حیات ستاره، زندگی حیوانات',
+    label: 'Life Cycle Story',
+    description: 'The story of birth, growth, and death of a being',
+    example: 'e.g., Life Cycle of a Star, Animal Lives',
   },
   [LongFormGenre.CONSTRUCTION_TIMELAPSE]: {
     emoji: '🏗️',
-    label: 'ساخت در طول زمان',
-    description: 'ساخت بناهای بزرگ از صفر تا صد',
-    example: 'مثال: ساخت برج ایفل، سد بزرگ',
+    label: 'Construction Timelapse',
+    description: 'Building great structures from start to finish',
+    example: 'e.g., Building the Eiffel Tower, Great Dams',
   },
   [LongFormGenre.STORY_ARC]: {
     emoji: '🎭',
-    label: 'داستان‌گویی',
-    description: 'یک داستان کامل با شروع، میانه، پایان',
-    example: 'مثال: افسانه‌های تاریخی، زندگی‌نامه‌ها',
+    label: 'Story Arc',
+    description: 'A complete story with beginning, middle, and end',
+    example: 'e.g., Historical Legends, Biographies',
   },
   [LongFormGenre.MYSTERY_REVEAL]: {
     emoji: '🔮',
-    label: 'کشف معما',
-    description: 'یک معما که گام به گام حل می‌شود',
-    example: 'مثال: مثلث برمودا، اهرام مصر',
+    label: 'Mystery Reveal',
+    description: 'A mystery that gets solved step by step',
+    example: 'e.g., Bermuda Triangle, Egyptian Pyramids',
   },
 };
 
@@ -98,14 +98,14 @@ export const LongFormatConfig: React.FC<LongFormatConfigProps> = ({
           📽️ Long Format Mode
         </h2>
         <p className="text-sm text-slate-400">
-          تولید ویدئوهای پازل طولانی (۸+ دقیقه) با کشش بالا
+          Create high-retention puzzle videos (8+ minutes)
         </p>
       </div>
 
       {/* Duration Slider */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-slate-300">
-          مدت زمان کل: <span className="text-cyan-400 font-bold">{duration} دقیقه</span>
+          Total Duration: <span className="text-cyan-400 font-bold">{duration} minutes</span>
         </label>
         <input
           type="range"
@@ -127,7 +127,7 @@ export const LongFormatConfig: React.FC<LongFormatConfigProps> = ({
       {/* Genre Selection */}
       <div className="space-y-3">
         <label className="block text-sm font-medium text-slate-300">
-          انتخاب ژانر:
+          Select Genre:
         </label>
         <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
           {Object.values(LongFormGenre).map((genre) => {
@@ -188,14 +188,14 @@ export const LongFormatConfig: React.FC<LongFormatConfigProps> = ({
       {selectedGenre && (
         <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4 space-y-2">
           <h4 className="text-sm font-semibold text-cyan-400">
-            📊 ساختار ویدئو:
+            📊 Video Structure:
           </h4>
           <ul className="text-xs text-slate-300 space-y-1">
-            <li>• ۵-۷ صحنه مستقل (هر کدام ۶۰-۱۲۰ ثانیه)</li>
-            <li>• موسیقی پویا (تغییر بین صحنه‌ها)</li>
-            <li>• Fact Cards هر ۲۰-۳۰ ثانیه</li>
-            <li>• Progress Bar و Chapter Titles</li>
-            <li>• Transition animations سینمایی</li>
+            <li>• 5-7 independent scenes (60-120 seconds each)</li>
+            <li>• Dynamic music (changes between scenes)</li>
+            <li>• Fact Cards every 20-30 seconds</li>
+            <li>• Progress Bar and Chapter Titles</li>
+            <li>• Cinematic transition animations</li>
           </ul>
         </div>
       )}
@@ -236,16 +236,16 @@ export const LongFormatConfig: React.FC<LongFormatConfigProps> = ({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            در حال تولید...
+            Generating...
           </span>
         ) : (
-          <span>🚀 شروع تولید Long Format</span>
+          <span>🚀 Start Long Format Production</span>
         )}
       </button>
 
       {/* Info Footer */}
       <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-800">
-        💡 نکته: ویدئوهای طولانی retention بالاتری با ساختار چند صحنه‌ای دارند
+        💡 Tip: Long-form videos with multi-scene structure have higher retention rates
       </div>
     </div>
   );

@@ -650,14 +650,23 @@ export const useProductionPipeline = (
             updateProductionStep('🖼️ THUMBNAIL', 'completed', 'آماده برای تولید تامبنیل');
 
             if (state.isAutoMode) {
-              // Step 8: ANIMATE - Start animation
+              // Step 8: ANIMATE - Start animation (with recording synchronization)
               updateProductionStep('🎬 ANIMATE', 'in_progress', 'انتظار 10 ثانیه برای آمادگی کامل مرورگر...');
               console.log(`⏸️ [AutoPilot] Waiting 10 seconds for browser to prepare...`);
               setTimeout(
                 () => {
-                  setState((s) => ({ ...s, isSolving: true, isRecording: true, pipelineStep: "RECORDING" }));
-                  updateProductionStep('🎬 ANIMATE', 'completed', 'انیمیشن آغاز شد');
-                  updateProductionStep('🎥 RECORD', 'in_progress', 'در حال ضبط ویدئو...');
+                  // CRITICAL FIX: Start recording FIRST, wait for it to be ready, then start animation
+                  console.log(`🎬 [AutoPilot] Starting recording first...`);
+                  setState((s) => ({ ...s, isRecording: true, pipelineStep: "RECORDING" }));
+                  updateProductionStep('🎥 RECORD', 'in_progress', 'در حال آماده‌سازی ضبط...');
+
+                  // Wait 500ms for MediaRecorder to initialize, then start animation
+                  setTimeout(() => {
+                    console.log(`🎬 [AutoPilot] Recording ready, now starting animation!`);
+                    setState((s) => ({ ...s, isSolving: true }));
+                    updateProductionStep('🎬 ANIMATE', 'completed', 'انیمیشن آغاز شد');
+                    updateProductionStep('🎥 RECORD', 'in_progress', 'در حال ضبط ویدئو...');
+                  }, 500);
                 },
                 10000
               );
@@ -768,14 +777,23 @@ export const useProductionPipeline = (
             updateProductionStep('🖼️ THUMBNAIL', 'completed', 'آماده برای تولید تامبنیل');
 
             if (state.isAutoMode) {
-              // Step 8: ANIMATE - Start animation
+              // Step 8: ANIMATE - Start animation (with recording synchronization)
               updateProductionStep('🎬 ANIMATE', 'in_progress', 'انتظار 10 ثانیه برای آمادگی کامل مرورگر...');
               console.log(`⏸️ [AutoPilot] Waiting 10 seconds for browser to prepare...`);
               setTimeout(
                 () => {
-                  setState((s) => ({ ...s, isSolving: true, isRecording: true, pipelineStep: "RECORDING" }));
-                  updateProductionStep('🎬 ANIMATE', 'completed', 'انیمیشن آغاز شد');
-                  updateProductionStep('🎥 RECORD', 'in_progress', 'در حال ضبط ویدئو...');
+                  // CRITICAL FIX: Start recording FIRST, wait for it to be ready, then start animation
+                  console.log(`🎬 [AutoPilot] Starting recording first...`);
+                  setState((s) => ({ ...s, isRecording: true, pipelineStep: "RECORDING" }));
+                  updateProductionStep('🎥 RECORD', 'in_progress', 'در حال آماده‌سازی ضبط...');
+
+                  // Wait 500ms for MediaRecorder to initialize, then start animation
+                  setTimeout(() => {
+                    console.log(`🎬 [AutoPilot] Recording ready, now starting animation!`);
+                    setState((s) => ({ ...s, isSolving: true }));
+                    updateProductionStep('🎬 ANIMATE', 'completed', 'انیمیشن آغاز شد');
+                    updateProductionStep('🎥 RECORD', 'in_progress', 'در حال ضبط ویدئو...');
+                  }, 500);
                 },
                 10000
               );
@@ -941,14 +959,23 @@ export const useProductionPipeline = (
             updateProductionStep('🖼️ THUMBNAIL', 'completed', 'آماده برای تولید تامبنیل');
 
             if (state.isAutoMode) {
-              // Step 8: ANIMATE - Start animation
+              // Step 8: ANIMATE - Start animation (with recording synchronization)
               updateProductionStep('🎬 ANIMATE', 'in_progress', 'انتظار 10 ثانیه برای آمادگی کامل مرورگر...');
               console.log(`⏸️ [AutoPilot] Waiting 10 seconds for browser to prepare...`);
               setTimeout(
                 () => {
-                  setState((s) => ({ ...s, isSolving: true, isRecording: true, pipelineStep: "RECORDING" }));
-                  updateProductionStep('🎬 ANIMATE', 'completed', 'انیمیشن آغاز شد');
-                  updateProductionStep('🎥 RECORD', 'in_progress', 'در حال ضبط ویدئو...');
+                  // CRITICAL FIX: Start recording FIRST, wait for it to be ready, then start animation
+                  console.log(`🎬 [AutoPilot] Starting recording first...`);
+                  setState((s) => ({ ...s, isRecording: true, pipelineStep: "RECORDING" }));
+                  updateProductionStep('🎥 RECORD', 'in_progress', 'در حال آماده‌سازی ضبط...');
+
+                  // Wait 500ms for MediaRecorder to initialize, then start animation
+                  setTimeout(() => {
+                    console.log(`🎬 [AutoPilot] Recording ready, now starting animation!`);
+                    setState((s) => ({ ...s, isSolving: true }));
+                    updateProductionStep('🎬 ANIMATE', 'completed', 'انیمیشن آغاز شد');
+                    updateProductionStep('🎥 RECORD', 'in_progress', 'در حال ضبط ویدئو...');
+                  }, 500);
                 },
                 10000
               );

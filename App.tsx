@@ -56,6 +56,9 @@ const AppContent: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasHandleRef = useRef<CanvasHandle>(null);
 
+  // Ref to store resolve function for recording ready synchronization
+  const recordingReadyResolveRef = useRef<(() => void) | null>(null);
+
   const handleAddCloudTrack = useCallback(
     (url: string, title: string, source: "backend" | "ai" = "backend") => {
       const newTrack: MusicTrack = {
@@ -121,26 +124,93 @@ const AppContent: React.FC = () => {
     [longFormatPipeline],
   );
 
+  // Callback for when recording is ready
+  const handleRecordingReady = useCallback(() => {
+    console.log(`🎬 [App] Recording ready! Now starting animation...`);
+    if (recordingReadyResolveRef.current) {
+      recordingReadyResolveRef.current();
+      recordingReadyResolveRef.current = null;
+    }
+  }, []);
+
   const handleToggleSolve = async () => {
-    setState((s) => {
-      const nextSolving = !s.isSolving;
-      if (audioRef.current) {
-        if (nextSolving) {
-          audioRef.current.currentTime = 0;
-          // Fade in over 2 seconds
-          playWithFade(audioRef.current, { duration: 2000, targetVolume: 1.0 });
-        } else {
-          // Fade out over 1.5 seconds then pause
-          pauseWithFade(audioRef.current, { duration: 1500 });
+    // Use a ref to avoid stale state issues
+    const currentlySolving = state.isSolving;
+
+    if (!currentlySolving) {
+      // STARTING: First start recording, THEN start animation
+      console.log(`🎬 [App] Starting recording first, waiting for ready signal...`);
+
+      // Ensure the selected music track is loaded to the audio element
+      if (audioRef.current && selectedTrackId) {
+        const selectedTrack = musicTracks.find((t) => t.id === selectedTrackId);
+        if (selectedTrack && audioRef.current.src !== selectedTrack.url) {
+          console.log(`🎵 [App] Loading selected track: ${selectedTrack.name}`);
+          audioRef.current.src = selectedTrack.url;
+          audioRef.current.load();
+          // Wait for audio to be ready
+          await new Promise<void>((resolve) => {
+            if (audioRef.current) {
+              audioRef.current.oncanplaythrough = () => resolve();
+              // Timeout fallback
+              setTimeout(resolve, 2000);
+            } else {
+              resolve();
+            }
+          });
+          console.log(`✅ [App] Audio loaded and ready`);
         }
       }
-      return {
+
+      // Reset audio to start
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+      }
+
+      // Create a promise that resolves when recording is ready
+      const recordingReadyPromise = new Promise<void>((resolve) => {
+        recordingReadyResolveRef.current = resolve;
+      });
+
+      // Step 1: Start recording (this triggers RecordingSystem to set up MediaRecorder)
+      setState((s) => ({
         ...s,
-        isSolving: nextSolving,
-        isRecording: nextSolving,
-        pipelineStep: nextSolving ? "RECORDING" : "IDLE",
-      };
-    });
+        isRecording: true,
+        pipelineStep: "RECORDING",
+      }));
+
+      // Step 2: Wait for recording to be ready (with timeout safety)
+      const timeoutPromise = new Promise<void>((resolve) => {
+        setTimeout(() => {
+          console.warn(`⚠️ [App] Recording ready timeout! Starting animation anyway...`);
+          resolve();
+        }, 3000); // 3 second timeout
+      });
+
+      await Promise.race([recordingReadyPromise, timeoutPromise]);
+
+      // Step 3: NOW start animation and audio
+      console.log(`🎬 [App] Recording confirmed ready, starting animation!`);
+      if (audioRef.current) {
+        playWithFade(audioRef.current, { duration: 2000, targetVolume: 1.0 });
+      }
+
+      setState((s) => ({
+        ...s,
+        isSolving: true,
+      }));
+    } else {
+      // STOPPING: Stop both at the same time
+      if (audioRef.current) {
+        pauseWithFade(audioRef.current, { duration: 1500 });
+      }
+      setState((s) => ({
+        ...s,
+        isSolving: false,
+        isRecording: false,
+        pipelineStep: "IDLE",
+      }));
+    }
   };
 
   const handleToggleFullPackage = useCallback(() => {
@@ -217,6 +287,7 @@ const AppContent: React.FC = () => {
         onRecordingComplete={
           videoMode === "short" ? setLastVideoBlob : longFormatPipeline.handleRecordingComplete
         }
+        onRecordingReady={videoMode === "short" ? handleRecordingReady : undefined}
       />
 
       <aside className="w-[400px] z-40 h-full glass-panel flex flex-col shrink-0">

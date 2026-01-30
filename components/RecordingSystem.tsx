@@ -9,6 +9,7 @@ interface RecordingSystemProps {
   metadata: YouTubeMetadata | null;
   durationMinutes: number;
   onRecordingComplete: (blob: Blob) => void;
+  onRecordingReady?: () => void; // Called when MediaRecorder is ready and started
 }
 
 const RecordingSystem: React.FC<RecordingSystemProps> = ({
@@ -18,6 +19,7 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
   metadata,
   durationMinutes,
   onRecordingComplete,
+  onRecordingReady,
 }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -308,11 +310,17 @@ const RecordingSystem: React.FC<RecordingSystemProps> = ({
       console.log(`   ✅ MediaRecorder started! Recording in progress...`);
       console.log(`   ⏱️ Recording started at: ${new Date().toISOString()}`);
 
+      // CRITICAL: Signal that recording is ready - animation can now start
+      if (onRecordingReady) {
+        console.log(`   📢 Signaling recording ready - animation can start NOW!`);
+        onRecordingReady();
+      }
+
     } catch (e) {
       console.error("❌ Recording Engine Failure:", e);
       isRecordingActiveRef.current = false;
     }
-  }, [getCanvas, audioRef, durationMinutes, onRecordingComplete, initAudioGraph]);
+  }, [getCanvas, audioRef, durationMinutes, onRecordingComplete, initAudioGraph, onRecordingReady]);
 
   // Main effect to control recording
   useEffect(() => {

@@ -22,7 +22,6 @@ import ComplexityConfig from "./sidebar/ComplexityConfig";
 import MusicUploader, { MusicTrack } from "./sidebar/MusicUploader";
 import SpeedSlider from "./SpeedSlider";
 import ProductionConsole from "./sidebar/ProductionConsole";
-import GifUploader from "./sidebar/GifUploader";
 import SnapSoundUploader from "./sidebar/SnapSoundUploader";
 import ChannelLogoUploader from "./sidebar/ChannelLogoUploader";
 import SmartMusicFinder from "./sidebar/SmartMusicFinder";
@@ -100,29 +99,12 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className="w-[400px] flex flex-col h-full bg-[#050508] border-r border-white/5 text-slate-300 font-sans z-40 overflow-hidden shadow-[10px_0_30px_rgba(0,0,0,0.5)]">
-      <div className="shrink-0 px-4 py-3 bg-zinc-950/50 border-b border-white/5 backdrop-blur-md flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <Database className="w-3.5 h-3.5 text-blue-500" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
-            Studio_Matrix
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-1 h-1 rounded-full ${
-              isGenerating || isSolving ? "bg-blue-500 animate-pulse" : "bg-zinc-700"
-            }`}
-          />
-          <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest">
-            {isGenerating ? "Uplink_Active" : "Standby"}
-          </span>
-        </div>
-      </div>
-
       {/* Database Connection Status */}
-      <div className={`shrink-0 px-4 py-2 border-b border-white/5 flex items-center justify-between ${
-        dbConnected ? "bg-emerald-950/20" : "bg-red-950/20"
-      }`}>
+      <div
+        className={`shrink-0 px-4 py-2 border-b border-white/5 flex items-center justify-between ${
+          dbConnected ? "bg-emerald-950/20" : "bg-red-950/20"
+        }`}
+      >
         <div className="flex items-center gap-2">
           {dbConnected ? (
             <Wifi className="w-3 h-3 text-emerald-500" />
@@ -274,25 +256,22 @@ const Sidebar: React.FC<SidebarProps> = ({
               disabled={isSolving || isAutoMode}
             />
             <SnapSoundUploader disabled={isSolving || isAutoMode} />
-            <GifUploader onGifSelect={onGifChange} disabled={isSolving || isAutoMode} />
           </div>
         </section>
-      </div>
+        <div className="bg-zinc-950/80 flex gap-2">
+          <button
+            onClick={() => onGenerate(true)}
+            disabled={isSolving || isAutoMode || isGenerating}
+            className="w-full flex items-center justify-center gap-3 py-3.5 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all disabled:opacity-20"
+          >
+            <Settings2 className={`w-4 h-4 text-blue-500 ${isGenerating ? "animate-spin" : ""}`} />
+            {isGenerating ? "SYNTHESIZING..." : "INITIALIZE MATRIX"}
+          </button>
 
-      <div className="shrink-0 p-4 bg-zinc-950/80 border-t border-white/5 space-y-3 backdrop-blur-xl">
-        <button
-          onClick={() => onGenerate(true)}
-          disabled={isSolving || isAutoMode || isGenerating}
-          className="w-full flex items-center justify-center gap-3 py-3.5 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all disabled:opacity-20"
-        >
-          <Settings2 className={`w-4 h-4 text-blue-500 ${isGenerating ? "animate-spin" : ""}`} />
-          {isGenerating ? "SYNTHESIZING..." : "INITIALIZE MATRIX"}
-        </button>
-
-        <button
-          onClick={onToggleSolve}
-          disabled={!hasImage || isGenerating}
-          className={`
+          <button
+            onClick={onToggleSolve}
+            disabled={!hasImage || isGenerating}
+            className={`
             w-full flex items-center justify-center gap-3 py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] transition-all
             ${
               isSolving
@@ -301,14 +280,15 @@ const Sidebar: React.FC<SidebarProps> = ({
             }
             disabled:opacity-20
           `}
-        >
-          {isSolving ? (
-            <Square className="w-4 h-4 fill-current" />
-          ) : (
-            <Play className="w-4 h-4 fill-current" />
-          )}
-          {isSolving ? "TERMINATE SEQ" : "EXECUTE SOLVE"}
-        </button>
+          >
+            {isSolving ? (
+              <Square className="w-4 h-4 fill-current" />
+            ) : (
+              <Play className="w-4 h-4 fill-current" />
+            )}
+            {isSolving ? "TERMINATE SEQ" : "EXECUTE SOLVE"}
+          </button>
+        </div>
       </div>
     </aside>
   );

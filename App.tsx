@@ -30,7 +30,7 @@ import { ChapterTitle } from "./components/longform/ChapterTitle";
 
 const AppContent: React.FC = () => {
   // Mode selection: 'short' or 'long'
-  const [videoMode, setVideoMode] = useState<'short' | 'long'>('short');
+  const [videoMode, setVideoMode] = useState<"short" | "long">("short");
   const [longFormatStructure, setLongFormatStructure] = useState<LongFormStructure | null>(null);
 
   const [preferences, setPreferences] = useState<UserPreferences>({
@@ -56,18 +56,21 @@ const AppContent: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasHandleRef = useRef<CanvasHandle>(null);
 
-  const handleAddCloudTrack = useCallback((url: string, title: string, source: 'backend' | 'ai' = 'backend') => {
-    const newTrack: MusicTrack = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: title,
-      url: url,
-      source: source,
-    };
-    setMusicTracks((prev) => [...prev, newTrack]);
-    setSelectedTrackId(newTrack.id);
-    // Note: Audio is already loaded in selectSmartMusic, don't reload here to prevent conflicts
-    console.log(`📝 [App] Cloud track added to list: ${title} (${source})`);
-  }, []);
+  const handleAddCloudTrack = useCallback(
+    (url: string, title: string, source: "backend" | "ai" = "backend") => {
+      const newTrack: MusicTrack = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: title,
+        url: url,
+        source: source,
+      };
+      setMusicTracks((prev) => [...prev, newTrack]);
+      setSelectedTrackId(newTrack.id);
+      // Note: Audio is already loaded in selectSmartMusic, don't reload here to prevent conflicts
+      console.log(`📝 [App] Cloud track added to list: ${title} (${source})`);
+    },
+    [],
+  );
 
   const fetchAudioBlob = useCallback(async (url: string): Promise<string | null> => {
     try {
@@ -75,7 +78,7 @@ const AppContent: React.FC = () => {
       const blob = await response.blob();
       return URL.createObjectURL(blob);
     } catch (error) {
-      console.error('[App] Failed to fetch audio blob:', error);
+      console.error("[App] Failed to fetch audio blob:", error);
       return null;
     }
   }, []);
@@ -96,7 +99,7 @@ const AppContent: React.FC = () => {
     selectedTrackId,
     setActiveTrackName,
     handleAddCloudTrack,
-    audioRef
+    audioRef,
   );
 
   // Long Format Pipeline Hook
@@ -109,11 +112,14 @@ const AppContent: React.FC = () => {
   });
 
   // Handler for starting Long Format production
-  const handleStartLongFormatProduction = useCallback((structure: LongFormStructure) => {
-    console.log('🎬 [App] Starting Long Format production:', structure);
-    setLongFormatStructure(structure);
-    longFormatPipeline.executeLongFormatPipeline(structure);
-  }, [longFormatPipeline]);
+  const handleStartLongFormatProduction = useCallback(
+    (structure: LongFormStructure) => {
+      console.log("🎬 [App] Starting Long Format production:", structure);
+      setLongFormatStructure(structure);
+      longFormatPipeline.executeLongFormatPipeline(structure);
+    },
+    [longFormatPipeline],
+  );
 
   const handleToggleSolve = async () => {
     setState((s) => {
@@ -153,33 +159,7 @@ const AppContent: React.FC = () => {
   return (
     <div className="flex h-screen bg-[#020205] text-slate-100 overflow-hidden font-['Inter'] relative">
       <audio ref={audioRef} loop crossOrigin="anonymous" style={{ display: "none" }} />
-
       {/* Mode Toggle - Top Center */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
-        <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-sm border border-slate-700 rounded-lg px-4 py-2 shadow-2xl">
-          <span className="text-xs text-slate-400 font-medium">Mode:</span>
-          <button
-            onClick={() => setVideoMode('short')}
-            className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
-              videoMode === 'short'
-                ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'
-                : 'text-slate-400 hover:text-slate-300'
-            }`}
-          >
-            Short (1-3 min)
-          </button>
-          <button
-            onClick={() => setVideoMode('long')}
-            className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
-              videoMode === 'long'
-                ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30'
-                : 'text-slate-400 hover:text-slate-300'
-            }`}
-          >
-            Long Format (8+ min)
-          </button>
-        </div>
-      </div>
 
       {/* Production Progress Indicator */}
       {state.isAutoMode && state.productionSteps && state.productionSteps.length > 0 && (
@@ -191,7 +171,7 @@ const AppContent: React.FC = () => {
       )}
 
       {/* Long Format Overlays */}
-      {videoMode === 'long' && longFormatStructure && longFormatPipeline.progress.currentStep !== 'IDLE' && (
+      {videoMode === "long" && longFormatStructure && longFormatPipeline.progress.currentStep !== "IDLE" && (
         <>
           {/* Progress Bar */}
           <ProgressBar
@@ -212,29 +192,60 @@ const AppContent: React.FC = () => {
           )}
 
           {/* Chapter Title (shown at scene transitions) */}
-          {longFormatPipeline.progress.currentStep === 'TRANSITIONING' &&
-           longFormatPipeline.currentScene?.chapterTitle && (
-            <ChapterTitle
-              title={longFormatPipeline.currentScene.chapterTitle}
-              subtitle={longFormatPipeline.currentScene.title}
-              chapterNumber={longFormatPipeline.progress.currentSceneIndex + 1}
-              totalChapters={longFormatPipeline.progress.totalScenes}
-            />
-          )}
+          {longFormatPipeline.progress.currentStep === "TRANSITIONING" &&
+            longFormatPipeline.currentScene?.chapterTitle && (
+              <ChapterTitle
+                title={longFormatPipeline.currentScene.chapterTitle}
+                subtitle={longFormatPipeline.currentScene.title}
+                chapterNumber={longFormatPipeline.progress.currentSceneIndex + 1}
+                totalChapters={longFormatPipeline.progress.totalScenes}
+              />
+            )}
         </>
       )}
 
       <RecordingSystem
-        isRecording={videoMode === 'short' ? state.isRecording : longFormatPipeline.isRecording}
+        isRecording={videoMode === "short" ? state.isRecording : longFormatPipeline.isRecording}
         getCanvas={() => canvasHandleRef.current?.getCanvas() || null}
         audioRef={audioRef}
-        metadata={videoMode === 'short' ? metadata : longFormatPipeline.metadata}
-        durationMinutes={videoMode === 'short' ? preferences.durationMinutes : (longFormatPipeline.currentScene?.duration || 60) / 60}
-        onRecordingComplete={videoMode === 'short' ? setLastVideoBlob : longFormatPipeline.handleRecordingComplete}
+        metadata={videoMode === "short" ? metadata : longFormatPipeline.metadata}
+        durationMinutes={
+          videoMode === "short"
+            ? preferences.durationMinutes
+            : (longFormatPipeline.currentScene?.duration || 60) / 60
+        }
+        onRecordingComplete={
+          videoMode === "short" ? setLastVideoBlob : longFormatPipeline.handleRecordingComplete
+        }
       />
 
-      <aside className="w-[420px] z-40 h-full glass-panel flex flex-col shrink-0">
-        {videoMode === 'short' ? (
+      <aside className="w-[400px] z-40 h-full glass-panel flex flex-col shrink-0">
+        <div className="w-[400px]">
+          <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-sm border border-slate-700  px-4 py-2 shadow-2xl">
+            <span className="text-xs text-slate-400 font-medium">Mode:</span>
+            <button
+              onClick={() => setVideoMode("short")}
+              className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                videoMode === "short"
+                  ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/30"
+                  : "text-slate-400 hover:text-slate-300"
+              }`}
+            >
+              Short (1-3 min)
+            </button>
+            <button
+              onClick={() => setVideoMode("long")}
+              className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                videoMode === "long"
+                  ? "bg-purple-500 text-white shadow-lg shadow-purple-500/30"
+                  : "text-slate-400 hover:text-slate-300"
+              }`}
+            >
+              Long Format (8+ min)
+            </button>
+          </div>
+        </div>
+        {videoMode === "short" ? (
           <Sidebar
             preferences={preferences}
             setPreferences={setPreferences}
@@ -250,7 +261,7 @@ const AppContent: React.FC = () => {
             onGenerate={(isManual: boolean) => {
               processPipelineItem(
                 { duration: preferences.durationMinutes, source: "VIRAL", pieceCount: 500 },
-                isManual
+                isManual,
               );
             }}
             onAutoMode={toggleAutoMode}
@@ -262,7 +273,7 @@ const AppContent: React.FC = () => {
                 id: Math.random().toString(36).substr(2, 9),
                 name: f.name,
                 url: URL.createObjectURL(f),
-                source: 'manual' as const,
+                source: "manual" as const,
               }));
               setMusicTracks((prev) => [...prev, ...newTracks]);
               if (newTracks.length === 1) setSelectedTrackId(newTracks[0].id);
@@ -281,15 +292,13 @@ const AppContent: React.FC = () => {
             <div className="shrink-0 px-4 py-3 bg-zinc-950/50 border-b border-white/5 backdrop-blur-md">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl">📽️</span>
-                <span className="text-sm font-bold text-purple-400">
-                  Long Format Studio
-                </span>
+                <span className="text-sm font-bold text-purple-400">Long Format Studio</span>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               <LongFormatConfig
                 onStartProduction={handleStartLongFormatProduction}
-                isGenerating={longFormatPipeline.progress.currentStep !== 'IDLE'}
+                isGenerating={longFormatPipeline.progress.currentStep !== "IDLE"}
               />
             </div>
           </div>
@@ -298,20 +307,28 @@ const AppContent: React.FC = () => {
 
       <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#020205] relative z-10 flex flex-col">
         <Header
-          progress={videoMode === 'short' ? state.progress : longFormatPipeline.progress.overallProgress}
-          isColoring={videoMode === 'short' ? state.isSolving : longFormatPipeline.isSolving}
-          isRecording={videoMode === 'short' ? state.isRecording : longFormatPipeline.isRecording}
+          progress={videoMode === "short" ? state.progress : longFormatPipeline.progress.overallProgress}
+          isColoring={videoMode === "short" ? state.isSolving : longFormatPipeline.isSolving}
+          isRecording={videoMode === "short" ? state.isRecording : longFormatPipeline.isRecording}
           error={state.error}
-          hasImage={videoMode === 'short' ? !!state.imageUrl : !!longFormatPipeline.currentImageUrl}
+          hasImage={videoMode === "short" ? !!state.imageUrl : !!longFormatPipeline.currentImageUrl}
         />
 
         <section className="h-[85vh] w-full relative bg-black shrink-0">
           <CanvasArea
             canvasHandleRef={canvasHandleRef}
-            imageUrl={videoMode === 'short' ? state.imageUrl : longFormatPipeline.currentImageUrl}
-            durationMinutes={videoMode === 'short' ? preferences.durationMinutes : (longFormatPipeline.currentScene?.duration || 60) / 60}
-            isColoring={videoMode === 'short' ? state.isSolving : longFormatPipeline.isSolving}
-            pieceCount={videoMode === 'short' ? preferences.pieceCount : longFormatPipeline.currentScene?.pieceCount || 500}
+            imageUrl={videoMode === "short" ? state.imageUrl : longFormatPipeline.currentImageUrl}
+            durationMinutes={
+              videoMode === "short"
+                ? preferences.durationMinutes
+                : (longFormatPipeline.currentScene?.duration || 60) / 60
+            }
+            isColoring={videoMode === "short" ? state.isSolving : longFormatPipeline.isSolving}
+            pieceCount={
+              videoMode === "short"
+                ? preferences.pieceCount
+                : longFormatPipeline.currentScene?.pieceCount || 500
+            }
             shape={preferences.shape}
             material={preferences.material}
             movement={preferences.movement}
@@ -325,12 +342,12 @@ const AppContent: React.FC = () => {
             docSnippets={state.docSnippets}
             storyArc={state.storyArc}
             showDocumentaryTips={preferences.showDocumentaryTips}
-            progress={videoMode === 'short' ? state.progress : longFormatPipeline.progress.sceneProgress}
+            progress={videoMode === "short" ? state.progress : longFormatPipeline.progress.sceneProgress}
           />
         </section>
 
         <div className="w-full bg-[#050508] border-t border-white/5 pb-32">
-          {videoMode === 'short' && (state.imageUrl || metadata || isMetadataLoading) && (
+          {videoMode === "short" && (state.imageUrl || metadata || isMetadataLoading) && (
             <div className="max-w-7xl mx-auto px-8 py-20 space-y-20">
               <ThumbnailGenerator
                 imageUrl={state.imageUrl}
@@ -343,7 +360,7 @@ const AppContent: React.FC = () => {
               <MetadataStudio metadata={metadata} isLoading={isMetadataLoading} />
             </div>
           )}
-          {videoMode === 'long' && longFormatPipeline.metadata && (
+          {videoMode === "long" && longFormatPipeline.metadata && (
             <div className="max-w-7xl mx-auto px-8 py-20 space-y-20">
               <ThumbnailGenerator
                 imageUrl={longFormatPipeline.currentImageUrl}
@@ -353,15 +370,12 @@ const AppContent: React.FC = () => {
                 narrativeLens={preferences.narrativeLens}
                 onThumbnailReady={setThumbnailDataUrl}
               />
-              <MetadataStudio
-                metadata={longFormatPipeline.metadata}
-                isLoading={false}
-              />
+              <MetadataStudio metadata={longFormatPipeline.metadata} isLoading={false} />
             </div>
           )}
         </div>
         <AudioStatus
-          isSolving={videoMode === 'short' ? state.isSolving : longFormatPipeline.isSolving}
+          isSolving={videoMode === "short" ? state.isSolving : longFormatPipeline.isSolving}
           musicTrack={activeTrackName || "Standby"}
           hasError={state.audioError}
         />

@@ -38,7 +38,7 @@ export type PipelineStep =
 export interface ProductionStep {
   id: string;
   label: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'error';
+  status: "pending" | "in_progress" | "completed" | "error";
   details?: string;
 }
 
@@ -64,7 +64,9 @@ const randomizeVisualParameters = () => {
   const randomMaterial = materials[Math.floor(Math.random() * materials.length)];
   const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
 
-  console.log(`🎭 [VARIETY] Style: ${randomStyle}, Movement: ${randomMovement}, Material: ${randomMaterial}, Shape: ${randomShape}`);
+  console.log(
+    `🎭 [VARIETY] Style: ${randomStyle}, Movement: ${randomMovement}, Material: ${randomMaterial}, Shape: ${randomShape}`,
+  );
 
   return { randomStyle, randomMovement, randomMaterial, randomShape };
 };
@@ -78,19 +80,32 @@ interface SmartMusicSelectionParams {
   musicMood: any;
   topic: string;
   fetchAudioBlob: (url: string) => Promise<string | null>;
-  onAddCloudTrack: (url: string, title: string, source?: 'backend' | 'ai') => void;
+  onAddCloudTrack: (url: string, title: string, source?: "backend" | "ai") => void;
   setActiveTrackName: (name: string | null) => void;
   audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
-const selectSmartMusic = async (params: SmartMusicSelectionParams): Promise<{ source: string; title: string } | null> => {
-  const { musicTracks, queueIndex, musicMood, topic, fetchAudioBlob, onAddCloudTrack, setActiveTrackName, audioRef } = params;
+const selectSmartMusic = async (
+  params: SmartMusicSelectionParams,
+): Promise<{ source: string; title: string } | null> => {
+  const {
+    musicTracks,
+    queueIndex,
+    musicMood,
+    topic,
+    fetchAudioBlob,
+    onAddCloudTrack,
+    setActiveTrackName,
+    audioRef,
+  } = params;
 
   // Priority 1: Manual tracks only (filter out backend/ai tracks)
-  const manualTracks = musicTracks.filter(track => track.source === 'manual');
+  const manualTracks = musicTracks.filter((track) => track.source === "manual");
   if (manualTracks.length > 0) {
     const selectedTrack = manualTracks[queueIndex % manualTracks.length];
-    console.log(`🎵 [MUSIC] Source: Manual (${queueIndex % manualTracks.length + 1}/${manualTracks.length}), Track: ${selectedTrack.name}`);
+    console.log(
+      `🎵 [MUSIC] Source: Manual (${(queueIndex % manualTracks.length) + 1}/${manualTracks.length}), Track: ${selectedTrack.name}`,
+    );
 
     // Load music to audioRef
     if (audioRef.current) {
@@ -105,19 +120,19 @@ const selectSmartMusic = async (params: SmartMusicSelectionParams): Promise<{ so
     }
 
     setActiveTrackName(selectedTrack.name);
-    return { source: 'Manual Upload', title: selectedTrack.name };
+    return { source: "Manual Upload", title: selectedTrack.name };
   }
 
   // Priority 2 & 3: Backend (در smartFetcher مدیریت می‌شود) یا AI
   console.log(`🎵 [MUSIC] No manual tracks, using smartFetcher...`);
-  const { smartFetcher } = await import('../services/smartFetcher');
+  const { smartFetcher } = await import("../services/smartFetcher");
   const trackData = await smartFetcher.fetchMusic(musicMood, topic);
 
   if (trackData && trackData.url) {
     const blobUrl = await fetchAudioBlob(trackData.url);
     if (blobUrl) {
       // Determine source type for musicTracks
-      const sourceType = trackData.source === 'Backend Database' ? 'backend' : 'ai';
+      const sourceType = trackData.source === "Backend Database" ? "backend" : "ai";
       onAddCloudTrack(blobUrl, trackData.title, sourceType);
       setActiveTrackName(trackData.title);
 
@@ -149,8 +164,8 @@ export const useProductionPipeline = (
   musicTracks: MusicTrack[],
   selectedTrackId: string | null,
   setActiveTrackName: (name: string | null) => void,
-  onAddCloudTrack: (url: string, title: string, source?: 'backend' | 'ai') => void,
-  audioRef: React.RefObject<HTMLAudioElement | null>
+  onAddCloudTrack: (url: string, title: string, source?: "backend" | "ai") => void,
+  audioRef: React.RefObject<HTMLAudioElement | null>,
 ) => {
   const [state, setState] = useState<
     PuzzleState & {
@@ -189,53 +204,53 @@ export const useProductionPipeline = (
   const [currentCoreSubject, setCurrentCoreSubject] = useState<string | null>(null);
   const [currentVisualPrompt, setCurrentVisualPrompt] = useState<string | null>(null);
   const [currentMusicInfo, setCurrentMusicInfo] = useState<{ source: string; title: string } | null>(null);
-  const [currentSource, setCurrentSource] = useState<'VIRAL' | 'BREAKING' | 'NARRATIVE' | 'MANUAL'>('MANUAL');
+  const [currentSource, setCurrentSource] = useState<"VIRAL" | "BREAKING" | "NARRATIVE" | "MANUAL">("MANUAL");
   const [currentSimilarityScore, setCurrentSimilarityScore] = useState<number | undefined>(undefined);
   const isExportingRef = useRef(false);
 
   // Helper function to update production steps
-  const updateProductionStep = useCallback((stepId: string, status: ProductionStep['status'], details?: string) => {
-    setState(prev => {
-      const existingStepIndex = prev.productionSteps.findIndex(s => s.id === stepId);
+  const updateProductionStep = useCallback(
+    (stepId: string, status: ProductionStep["status"], details?: string) => {
+      setState((prev) => {
+        const existingStepIndex = prev.productionSteps.findIndex((s) => s.id === stepId);
 
-      if (existingStepIndex >= 0) {
-        // Update existing step
-        const updatedSteps = [...prev.productionSteps];
-        updatedSteps[existingStepIndex] = {
-          ...updatedSteps[existingStepIndex],
-          status,
-          details: details || updatedSteps[existingStepIndex].details,
-        };
-        return { ...prev, productionSteps: updatedSteps };
-      } else {
-        // Add new step
-        return {
-          ...prev,
-          productionSteps: [
-            ...prev.productionSteps,
-            { id: stepId, label: stepId, status, details },
-          ],
-        };
-      }
-    });
-  }, []);
+        if (existingStepIndex >= 0) {
+          // Update existing step
+          const updatedSteps = [...prev.productionSteps];
+          updatedSteps[existingStepIndex] = {
+            ...updatedSteps[existingStepIndex],
+            status,
+            details: details || updatedSteps[existingStepIndex].details,
+          };
+          return { ...prev, productionSteps: updatedSteps };
+        } else {
+          // Add new step
+          return {
+            ...prev,
+            productionSteps: [...prev.productionSteps, { id: stepId, label: stepId, status, details }],
+          };
+        }
+      });
+    },
+    [],
+  );
 
   // Initialize production steps
   const initializeProductionSteps = useCallback(() => {
     const steps: ProductionStep[] = [
-      { id: '📊 SCAN', label: 'انتخاب نوع محتوا', status: 'pending' },
-      { id: '🔊 SOUND FX', label: 'تصادفی‌سازی افکت‌های صوتی', status: 'pending' },
-      { id: '🎭 VARIETY', label: 'تصادفی‌سازی پارامترهای بصری', status: 'pending' },
-      { id: '🔍 VALIDATION', label: 'بررسی تشابه محتوا', status: 'pending' },
-      { id: '🎵 MUSIC', label: 'انتخاب موسیقی', status: 'pending' },
-      { id: '🎨 GENERATE', label: 'تولید تصویر و داستان', status: 'pending' },
-      { id: '📝 METADATA', label: 'تولید متادیتا', status: 'pending' },
-      { id: '🖼️ THUMBNAIL', label: 'آماده‌سازی تامبنیل', status: 'pending' },
-      { id: '🎬 ANIMATE', label: 'شروع انیمیشن پازل', status: 'pending' },
-      { id: '🎥 RECORD', label: 'ضبط ویدئو', status: 'pending' },
-      { id: '📦 PACKAGE', label: 'ذخیره و دانلود', status: 'pending' },
+      { id: "📊 SCAN", label: "انتخاب نوع محتوا", status: "pending" },
+      { id: "🔊 SOUND FX", label: "تصادفی‌سازی افکت‌های صوتی", status: "pending" },
+      { id: "🎭 VARIETY", label: "تصادفی‌سازی پارامترهای بصری", status: "pending" },
+      { id: "🔍 VALIDATION", label: "بررسی تشابه محتوا", status: "pending" },
+      { id: "🎵 MUSIC", label: "انتخاب موسیقی", status: "pending" },
+      { id: "🎨 GENERATE", label: "تولید تصویر و داستان", status: "pending" },
+      { id: "📝 METADATA", label: "تولید متادیتا", status: "pending" },
+      { id: "🖼️ THUMBNAIL", label: "آماده‌سازی تامبنیل", status: "pending" },
+      { id: "🎬 ANIMATE", label: "شروع انیمیشن پازل", status: "pending" },
+      { id: "🎥 RECORD", label: "ضبط ویدئو", status: "pending" },
+      { id: "📦 PACKAGE", label: "ذخیره و دانلود", status: "pending" },
     ];
-    setState(prev => ({ ...prev, productionSteps: steps }));
+    setState((prev) => ({ ...prev, productionSteps: steps }));
   }, []);
 
   const downloadFile = (name: string, blob: Blob) => {
@@ -260,8 +275,8 @@ export const useProductionPipeline = (
         if (res.ok) {
           let blob = await res.blob();
           // Ensure blob has correct MIME type
-          if (!blob.type || blob.type === 'application/octet-stream') {
-            blob = new Blob([blob], { type: 'audio/mpeg' });
+          if (!blob.type || blob.type === "application/octet-stream") {
+            blob = new Blob([blob], { type: "audio/mpeg" });
             console.log(`🎵 [fetchAudioBlob] Fixed blob MIME type to audio/mpeg`);
           }
           const blobUrl = URL.createObjectURL(blob);
@@ -293,7 +308,7 @@ export const useProductionPipeline = (
       const baseFileName = `${jalali}_${cleanTitle}`;
 
       // Step 9: PACKAGE - Export and save
-      updateProductionStep('📦 PACKAGE', 'in_progress', 'شروع دانلود و ذخیره‌سازی...');
+      updateProductionStep("📦 PACKAGE", "in_progress", "شروع دانلود و ذخیره‌سازی...");
       console.log(`📥 [Packaging] Starting downloads with base filename: ${baseFileName}`);
 
       try {
@@ -305,7 +320,7 @@ export const useProductionPipeline = (
           await new Promise((r) => setTimeout(r, 1500));
           downloadFile(
             `${baseFileName}_Metadata.txt`,
-            new Blob([`TITLE: ${metadata.title}\n\nDESC: ${metadata.description}`], { type: "text/plain" })
+            new Blob([`TITLE: ${metadata.title}\n\nDESC: ${metadata.description}`], { type: "text/plain" }),
           );
         }
 
@@ -343,11 +358,11 @@ export const useProductionPipeline = (
               material: preferences.material,
               movement: preferences.movement,
               soundEffects: {
-                snap: 'randomized',
-                move: 'randomized',
-                wave: 'randomized',
-                destruct: 'randomized'
-              }
+                snap: "randomized",
+                move: "randomized",
+                wave: "randomized",
+                destruct: "randomized",
+              },
             },
             story: {
               coreSubject: currentCoreSubject,
@@ -381,22 +396,26 @@ export const useProductionPipeline = (
             console.log(`✅ [API] Content saved to database successfully!`);
             console.log(`   Database ID: ${saveResult.data?._id}`);
             console.log(`📦 [PACKAGE] Saved: ${payload.files.videoFilename}, DB ID: ${saveResult.data?._id}`);
-            updateProductionStep('📦 PACKAGE', 'completed', `ذخیره شد - DB ID: ${saveResult.data?._id?.substring(0, 8)}...`);
+            updateProductionStep(
+              "📦 PACKAGE",
+              "completed",
+              `ذخیره شد - DB ID: ${saveResult.data?._id?.substring(0, 8)}...`,
+            );
           } else {
             console.error(`❌ [API] Failed to save content: ${saveResult.error}`);
             console.warn(`⚠️ [API] Content was downloaded but not saved to database`);
-            updateProductionStep('📦 PACKAGE', 'completed', 'دانلود انجام شد - خطا در ذخیره دیتابیس');
+            updateProductionStep("📦 PACKAGE", "completed", "دانلود انجام شد - خطا در ذخیره دیتابیس");
           }
 
           // Clear after recording
           setCurrentCoreSubject(null);
           setCurrentVisualPrompt(null);
           setCurrentMusicInfo(null);
-          setCurrentSource('MANUAL');
+          setCurrentSource("MANUAL");
           setCurrentSimilarityScore(undefined);
         } else {
           console.log(`⏭️ [API] Skipping database save (missing required data)`);
-          updateProductionStep('📦 PACKAGE', 'completed', 'دانلود انجام شد - بدون ذخیره دیتابیس');
+          updateProductionStep("📦 PACKAGE", "completed", "دانلود انجام شد - بدون ذخیره دیتابیس");
         }
       } finally {
         setLastVideoBlob(null);
@@ -432,7 +451,7 @@ export const useProductionPipeline = (
         }, 2500);
       }
     },
-    [metadata, thumbnailDataUrl]
+    [metadata, thumbnailDataUrl],
   );
 
   useEffect(() => {
@@ -470,21 +489,25 @@ export const useProductionPipeline = (
           initializeProductionSteps();
 
           // Step 1: SCAN
-          updateProductionStep('📊 SCAN', 'in_progress');
+          updateProductionStep("📊 SCAN", "in_progress");
           console.log(`📊 [SCAN] Content Type: ${item.source}`);
-          updateProductionStep('📊 SCAN', 'completed', `نوع: ${item.source}, مدت: ${item.duration * 60}s, قطعات: ${item.pieceCount}`);
+          updateProductionStep(
+            "📊 SCAN",
+            "completed",
+            `نوع: ${item.source}, مدت: ${item.duration * 60}s, قطعات: ${item.pieceCount}`,
+          );
 
           // Step 2: Sound FX
-          updateProductionStep('🔊 SOUND FX', 'in_progress');
+          updateProductionStep("🔊 SOUND FX", "in_progress");
           console.log(`🔊 [SOUND FX] Randomizing all sound effects...`);
-          const { soundRandomizer } = await import('../services/soundRandomizer');
-          const { useBackendMode } = await import('../contexts/BackendModeContext');
+          const { soundRandomizer } = await import("../services/soundRandomizer");
+          const { useBackendMode } = await import("../contexts/BackendModeContext");
           // We can't use the hook here, so we check smartFetcher's mode instead
-          const { smartFetcher } = await import('../services/smartFetcher');
+          const { smartFetcher } = await import("../services/smartFetcher");
           const preferBackend = smartFetcher.isBackendEnabled();
           await soundRandomizer.randomizeAllSounds(preferBackend);
           console.log(`🔊 [SOUND FX] Randomized: SNAP, MOVE, WAVE, DESTRUCT`);
-          updateProductionStep('🔊 SOUND FX', 'completed', 'SNAP, MOVE, WAVE, DESTRUCT');
+          updateProductionStep("🔊 SOUND FX", "completed", "SNAP, MOVE, WAVE, DESTRUCT");
 
           if (item.source === "VIRAL") {
             let contentPackage;
@@ -493,7 +516,7 @@ export const useProductionPipeline = (
             const maxAttempts = 5;
 
             // Step 3: VALIDATION - Uniqueness check
-            updateProductionStep('🔍 VALIDATION', 'in_progress');
+            updateProductionStep("🔍 VALIDATION", "in_progress");
 
             // Validation loop: Keep generating until we find unique content
             while (attempts < maxAttempts) {
@@ -506,7 +529,7 @@ export const useProductionPipeline = (
               const variedTopic = addTopicVariation(randomNiche.topic);
 
               console.log(
-                `\n🎯 Attempt ${attempts}/${maxAttempts}: Generating content for "${randomNiche.label}"`
+                `\n🎯 Attempt ${attempts}/${maxAttempts}: Generating content for "${randomNiche.label}"`,
               );
               console.log(`🎨 Variation: ${variedTopic.substring(0, 100)}...`);
 
@@ -517,7 +540,7 @@ export const useProductionPipeline = (
               coreSubject = await extractCoreSubject(
                 contentPackage.visualPrompt,
                 contentPackage.storyArc,
-                randomNiche.label
+                randomNiche.label,
               );
 
               // Check similarity via backend API
@@ -526,62 +549,83 @@ export const useProductionPipeline = (
 
               if (similarityResult.success && similarityResult.data) {
                 const isSimilar = similarityResult.data.isSimilar;
-                const score = similarityResult.data.similarityScore !== undefined
-                  ? similarityResult.data.similarityScore
-                  : 0;
+                const score =
+                  similarityResult.data.similarityScore !== undefined
+                    ? similarityResult.data.similarityScore
+                    : 0;
 
                 if (!isSimilar) {
                   console.log(`✅ Content approved as unique! Proceeding with generation.`);
                   console.log(`🔍 [VALIDATION] Similarity Score: ${score} (UNIQUE)`);
                   const scoreText = score.toFixed(2);
-                  updateProductionStep('🔍 VALIDATION', 'completed', `امتیاز: ${scoreText} - محتوای منحصربه‌فرد`);
+                  updateProductionStep(
+                    "🔍 VALIDATION",
+                    "completed",
+                    `امتیاز: ${scoreText} - محتوای منحصربه‌فرد`,
+                  );
                   setCurrentSimilarityScore(score);
                   break; // Content is unique, exit loop
                 } else {
                   console.log(`❌ Content rejected as too similar (score: ${score})`);
                   console.log(`🔍 [VALIDATION] Similarity Score: ${score} (DUPLICATE)`);
                   if (similarityResult.data.matchedContents?.length > 0) {
-                    console.log(`   Matched: ${similarityResult.data.matchedContents.map((m: any) => m.title).join(", ")}`);
+                    console.log(
+                      `   Matched: ${similarityResult.data.matchedContents.map((m: any) => m.title).join(", ")}`,
+                    );
                   }
 
                   if (attempts < maxAttempts) {
                     console.log(`   🔄 Regenerating with different parameters...\n`);
                     const scoreText = score.toFixed(2);
-                    updateProductionStep('🔍 VALIDATION', 'in_progress', `امتیاز: ${scoreText} - تلاش ${attempts}/${maxAttempts}`);
+                    updateProductionStep(
+                      "🔍 VALIDATION",
+                      "in_progress",
+                      `امتیاز: ${scoreText} - تلاش ${attempts}/${maxAttempts}`,
+                    );
                   }
                 }
               } else {
                 // If API check fails, log warning but continue (don't crash the pipeline)
                 console.warn(`⚠️ [API] Similarity check failed: ${similarityResult.error}`);
                 console.log(`   Proceeding with content generation (assuming unique)...`);
-                updateProductionStep('🔍 VALIDATION', 'completed', 'خطا در بررسی - ادامه با فرض منحصربه‌فرد بودن');
+                updateProductionStep(
+                  "🔍 VALIDATION",
+                  "completed",
+                  "خطا در بررسی - ادامه با فرض منحصربه‌فرد بودن",
+                );
                 break;
               }
             }
 
             if (attempts >= maxAttempts) {
               console.warn(`⚠️ Max attempts reached. Using last generated content despite similarity.`);
-              updateProductionStep('🔍 VALIDATION', 'completed', `حداکثر تلاش - استفاده از آخرین محتوا`);
+              updateProductionStep("🔍 VALIDATION", "completed", `حداکثر تلاش - استفاده از آخرین محتوا`);
             }
 
             // Store core subject and visual prompt for later recording
             setCurrentCoreSubject(coreSubject);
             setCurrentVisualPrompt(contentPackage.visualPrompt);
-            setCurrentSource('VIRAL');
+            setCurrentSource("VIRAL");
 
             sourceSubject = contentPackage.visualPrompt;
             activeTopicType = TopicType.VIRAL;
             categoryLabel = contentPackage.theme.category;
 
             // Step 3: VARIETY - Randomize Visual Parameters
-            updateProductionStep('🎭 VARIETY', 'in_progress');
+            updateProductionStep("🎭 VARIETY", "in_progress");
             const { randomStyle, randomMovement, randomMaterial, randomShape } = randomizeVisualParameters();
-            console.log(`🎭 [VARIETY] Style: ${randomStyle}, Movement: ${randomMovement}, Material: ${randomMaterial}, Shape: ${randomShape}`);
-            updateProductionStep('🎭 VARIETY', 'completed', `سبک: ${randomStyle}, حرکت: ${randomMovement}, ماده: ${randomMaterial}, شکل: ${randomShape}`);
+            console.log(
+              `🎭 [VARIETY] Style: ${randomStyle}, Movement: ${randomMovement}, Material: ${randomMaterial}, Shape: ${randomShape}`,
+            );
+            updateProductionStep(
+              "🎭 VARIETY",
+              "completed",
+              `سبک: ${randomStyle}, حرکت: ${randomMovement}, ماده: ${randomMaterial}, شکل: ${randomShape}`,
+            );
 
             // Step 4: MUSIC - Smart Music Selection
             setState((s) => ({ ...s, pipelineStep: "MUSIC" }));
-            updateProductionStep('🎵 MUSIC', 'in_progress');
+            updateProductionStep("🎵 MUSIC", "in_progress");
             const musicResult = await selectSmartMusic({
               musicTracks,
               queueIndex: state.currentQueueIdx,
@@ -594,21 +638,33 @@ export const useProductionPipeline = (
             });
             if (musicResult) {
               console.log(`🎵 [MUSIC] Selected: ${musicResult.title} from ${musicResult.source}`);
-              const titlePreview = musicResult.title.length > 40 ? musicResult.title.substring(0, 40) + '...' : musicResult.title;
-              updateProductionStep('🎵 MUSIC', 'completed', `منبع: ${musicResult.source}, قطعه: ${titlePreview}`);
+              const titlePreview =
+                musicResult.title.length > 40
+                  ? musicResult.title.substring(0, 40) + "..."
+                  : musicResult.title;
+              updateProductionStep(
+                "🎵 MUSIC",
+                "completed",
+                `منبع: ${musicResult.source}, قطعه: ${titlePreview}`,
+              );
               setCurrentMusicInfo(musicResult);
             } else {
-              updateProductionStep('🎵 MUSIC', 'completed', 'موسیقی انتخاب نشد - ادامه بدون موسیقی');
+              updateProductionStep("🎵 MUSIC", "completed", "موسیقی انتخاب نشد - ادامه بدون موسیقی");
               setCurrentMusicInfo(null);
             }
 
             // Step 5: GENERATE - Create Visual Content
             setState((s) => ({ ...s, pipelineStep: "SYNTH" }));
-            updateProductionStep('🎨 GENERATE', 'in_progress');
+            updateProductionStep("🎨 GENERATE", "in_progress");
             const art = await generateArtImage(randomStyle, contentPackage.visualPrompt);
-            console.log(`🎨 [GENERATE] Image: ${art.imageUrl?.substring(0, 50)}..., Story: ${contentPackage.storyArc.hook}`);
-            const hookPreview = contentPackage.storyArc.hook.length > 50 ? contentPackage.storyArc.hook.substring(0, 50) + '...' : contentPackage.storyArc.hook;
-            updateProductionStep('🎨 GENERATE', 'completed', `تصویر تولید شد - داستان: ${hookPreview}`);
+            console.log(
+              `🎨 [GENERATE] Image: ${art.imageUrl?.substring(0, 50)}..., Story: ${contentPackage.storyArc.hook}`,
+            );
+            const hookPreview =
+              contentPackage.storyArc.hook.length > 50
+                ? contentPackage.storyArc.hook.substring(0, 50) + "..."
+                : contentPackage.storyArc.hook;
+            updateProductionStep("🎨 GENERATE", "completed", `تصویر تولید شد - داستان: ${hookPreview}`);
 
             setPreferences((p) => ({
               ...p,
@@ -634,42 +690,40 @@ export const useProductionPipeline = (
             }));
 
             // Step 6: METADATA - Generate metadata
-            updateProductionStep('📋 METADATA', 'in_progress');
+            updateProductionStep("📋 METADATA", "in_progress");
             setIsMetadataLoading(true);
             setMetadata(contentPackage.metadata);
             setIsMetadataLoading(false);
             console.log(`📋 [METADATA] Title: ${contentPackage.metadata?.title}`);
-            const metadataTitle = contentPackage.metadata?.title || 'نامشخص';
-            const titlePreview = metadataTitle.length > 50 ? metadataTitle.substring(0, 50) + '...' : metadataTitle;
-            updateProductionStep('📋 METADATA', 'completed', `عنوان: ${titlePreview}`);
+            const metadataTitle = contentPackage.metadata?.title || "نامشخص";
+            const titlePreview =
+              metadataTitle.length > 50 ? metadataTitle.substring(0, 50) + "..." : metadataTitle;
+            updateProductionStep("📋 METADATA", "completed", `عنوان: ${titlePreview}`);
 
             // Step 7: THUMBNAIL - Prepare thumbnail
             setState((s) => ({ ...s, pipelineStep: "THUMBNAIL" }));
-            updateProductionStep('🖼️ THUMBNAIL', 'in_progress');
+            updateProductionStep("🖼️ THUMBNAIL", "in_progress");
             console.log(`🖼️ [THUMBNAIL] Preparing thumbnail generation...`);
-            updateProductionStep('🖼️ THUMBNAIL', 'completed', 'آماده برای تولید تامبنیل');
+            updateProductionStep("🖼️ THUMBNAIL", "completed", "آماده برای تولید تامبنیل");
 
             if (state.isAutoMode) {
               // Step 8: ANIMATE - Start animation (with recording synchronization)
-              updateProductionStep('🎬 ANIMATE', 'in_progress', 'انتظار 10 ثانیه برای آمادگی کامل مرورگر...');
+              updateProductionStep("🎬 ANIMATE", "in_progress", "انتظار 10 ثانیه برای آمادگی کامل مرورگر...");
               console.log(`⏸️ [AutoPilot] Waiting 10 seconds for browser to prepare...`);
-              setTimeout(
-                () => {
-                  // CRITICAL FIX: Start recording FIRST, wait for it to be ready, then start animation
-                  console.log(`🎬 [AutoPilot] Starting recording first...`);
-                  setState((s) => ({ ...s, isRecording: true, pipelineStep: "RECORDING" }));
-                  updateProductionStep('🎥 RECORD', 'in_progress', 'در حال آماده‌سازی ضبط...');
+              setTimeout(() => {
+                // CRITICAL FIX: Start recording FIRST, wait for it to be ready, then start animation
+                console.log(`🎬 [AutoPilot] Starting recording first...`);
+                setState((s) => ({ ...s, isRecording: true, pipelineStep: "RECORDING" }));
+                updateProductionStep("🎥 RECORD", "in_progress", "در حال آماده‌سازی ضبط...");
 
-                  // Wait 500ms for MediaRecorder to initialize, then start animation
-                  setTimeout(() => {
-                    console.log(`🎬 [AutoPilot] Recording ready, now starting animation!`);
-                    setState((s) => ({ ...s, isSolving: true }));
-                    updateProductionStep('🎬 ANIMATE', 'completed', 'انیمیشن آغاز شد');
-                    updateProductionStep('🎥 RECORD', 'in_progress', 'در حال ضبط ویدئو...');
-                  }, 500);
-                },
-                10000
-              );
+                // Wait 500ms for MediaRecorder to initialize, then start animation
+                setTimeout(() => {
+                  console.log(`🎬 [AutoPilot] Recording ready, now starting animation!`);
+                  setState((s) => ({ ...s, isSolving: true }));
+                  updateProductionStep("🎬 ANIMATE", "completed", "انیمیشن آغاز شد");
+                  updateProductionStep("🎥 RECORD", "in_progress", "در حال ضبط ویدئو...");
+                }, 500);
+              }, 10000);
             } else {
               setState((s) => ({ ...s, pipelineStep: "IDLE" }));
             }
@@ -684,31 +738,37 @@ export const useProductionPipeline = (
             const coreSubject = await extractCoreSubject(
               contentPackage.visualPrompt,
               contentPackage.storyArc,
-              randomNiche.label
+              randomNiche.label,
             );
 
             // Store for later database save
             setCurrentCoreSubject(coreSubject);
             setCurrentVisualPrompt(contentPackage.visualPrompt);
-            setCurrentSource('NARRATIVE');
+            setCurrentSource("NARRATIVE");
 
             sourceSubject = contentPackage.visualPrompt;
             activeTopicType = TopicType.NARRATIVE;
             categoryLabel = contentPackage.theme.category;
 
             // NARRATIVE skips VALIDATION step (no similarity check needed for historical content)
-            updateProductionStep('🔍 VALIDATION', 'completed', 'بدون نیاز به اعتبارسنجی - محتوای تاریخی');
+            updateProductionStep("🔍 VALIDATION", "completed", "بدون نیاز به اعتبارسنجی - محتوای تاریخی");
             setCurrentSimilarityScore(undefined);
 
             // Step 3: VARIETY - Randomize Visual Parameters
-            updateProductionStep('🎭 VARIETY', 'in_progress');
+            updateProductionStep("🎭 VARIETY", "in_progress");
             const narrativeVisual = randomizeVisualParameters();
-            console.log(`🎭 [VARIETY] Style: ${narrativeVisual.randomStyle}, Movement: ${narrativeVisual.randomMovement}`);
-            updateProductionStep('🎭 VARIETY', 'completed', `سبک: ${narrativeVisual.randomStyle}, حرکت: ${narrativeVisual.randomMovement}, ماده: ${narrativeVisual.randomMaterial}, شکل: ${narrativeVisual.randomShape}`);
+            console.log(
+              `🎭 [VARIETY] Style: ${narrativeVisual.randomStyle}, Movement: ${narrativeVisual.randomMovement}`,
+            );
+            updateProductionStep(
+              "🎭 VARIETY",
+              "completed",
+              `سبک: ${narrativeVisual.randomStyle}, حرکت: ${narrativeVisual.randomMovement}, ماده: ${narrativeVisual.randomMaterial}, شکل: ${narrativeVisual.randomShape}`,
+            );
 
             // Step 4: MUSIC - Smart Music Selection
             setState((s) => ({ ...s, pipelineStep: "MUSIC" }));
-            updateProductionStep('🎵 MUSIC', 'in_progress');
+            updateProductionStep("🎵 MUSIC", "in_progress");
             const narrativeMusicResult = await selectSmartMusic({
               musicTracks,
               queueIndex: state.currentQueueIdx,
@@ -720,22 +780,40 @@ export const useProductionPipeline = (
               audioRef,
             });
             if (narrativeMusicResult) {
-              console.log(`🎵 [MUSIC] Selected: ${narrativeMusicResult.title} from ${narrativeMusicResult.source}`);
-              const musicTitlePreview = narrativeMusicResult.title.length > 40 ? narrativeMusicResult.title.substring(0, 40) + '...' : narrativeMusicResult.title;
-              updateProductionStep('🎵 MUSIC', 'completed', `منبع: ${narrativeMusicResult.source}, قطعه: ${musicTitlePreview}`);
+              console.log(
+                `🎵 [MUSIC] Selected: ${narrativeMusicResult.title} from ${narrativeMusicResult.source}`,
+              );
+              const musicTitlePreview =
+                narrativeMusicResult.title.length > 40
+                  ? narrativeMusicResult.title.substring(0, 40) + "..."
+                  : narrativeMusicResult.title;
+              updateProductionStep(
+                "🎵 MUSIC",
+                "completed",
+                `منبع: ${narrativeMusicResult.source}, قطعه: ${musicTitlePreview}`,
+              );
               setCurrentMusicInfo(narrativeMusicResult);
             } else {
-              updateProductionStep('🎵 MUSIC', 'completed', 'موسیقی انتخاب نشد - ادامه بدون موسیقی');
+              updateProductionStep("🎵 MUSIC", "completed", "موسیقی انتخاب نشد - ادامه بدون موسیقی");
               setCurrentMusicInfo(null);
             }
 
             // Step 5: GENERATE - Create Visual Content
             setState((s) => ({ ...s, pipelineStep: "SYNTH" }));
-            updateProductionStep('🎨 GENERATE', 'in_progress');
+            updateProductionStep("🎨 GENERATE", "in_progress");
             const art = await generateArtImage(narrativeVisual.randomStyle, contentPackage.visualPrompt);
-            console.log(`🎨 [GENERATE] Image: ${art.imageUrl?.substring(0, 50)}..., Story: ${contentPackage.storyArc.hook}`);
-            const narrativeHookPreview = contentPackage.storyArc.hook.length > 50 ? contentPackage.storyArc.hook.substring(0, 50) + '...' : contentPackage.storyArc.hook;
-            updateProductionStep('🎨 GENERATE', 'completed', `تصویر تولید شد - داستان: ${narrativeHookPreview}`);
+            console.log(
+              `🎨 [GENERATE] Image: ${art.imageUrl?.substring(0, 50)}..., Story: ${contentPackage.storyArc.hook}`,
+            );
+            const narrativeHookPreview =
+              contentPackage.storyArc.hook.length > 50
+                ? contentPackage.storyArc.hook.substring(0, 50) + "..."
+                : contentPackage.storyArc.hook;
+            updateProductionStep(
+              "🎨 GENERATE",
+              "completed",
+              `تصویر تولید شد - داستان: ${narrativeHookPreview}`,
+            );
 
             setPreferences((p) => ({
               ...p,
@@ -761,42 +839,40 @@ export const useProductionPipeline = (
             }));
 
             // Step 6: METADATA - Generate metadata
-            updateProductionStep('📋 METADATA', 'in_progress');
+            updateProductionStep("📋 METADATA", "in_progress");
             setIsMetadataLoading(true);
             setMetadata(contentPackage.metadata);
             setIsMetadataLoading(false);
             console.log(`📋 [METADATA] Title: ${contentPackage.metadata?.title}`);
-            const metadataTitle = contentPackage.metadata?.title || 'نامشخص';
-            const titlePreview = metadataTitle.length > 50 ? metadataTitle.substring(0, 50) + '...' : metadataTitle;
-            updateProductionStep('📋 METADATA', 'completed', `عنوان: ${titlePreview}`);
+            const metadataTitle = contentPackage.metadata?.title || "نامشخص";
+            const titlePreview =
+              metadataTitle.length > 50 ? metadataTitle.substring(0, 50) + "..." : metadataTitle;
+            updateProductionStep("📋 METADATA", "completed", `عنوان: ${titlePreview}`);
 
             // Step 7: THUMBNAIL - Prepare thumbnail
             setState((s) => ({ ...s, pipelineStep: "THUMBNAIL" }));
-            updateProductionStep('🖼️ THUMBNAIL', 'in_progress');
+            updateProductionStep("🖼️ THUMBNAIL", "in_progress");
             console.log(`🖼️ [THUMBNAIL] Preparing thumbnail generation...`);
-            updateProductionStep('🖼️ THUMBNAIL', 'completed', 'آماده برای تولید تامبنیل');
+            updateProductionStep("🖼️ THUMBNAIL", "completed", "آماده برای تولید تامبنیل");
 
             if (state.isAutoMode) {
               // Step 8: ANIMATE - Start animation (with recording synchronization)
-              updateProductionStep('🎬 ANIMATE', 'in_progress', 'انتظار 10 ثانیه برای آمادگی کامل مرورگر...');
+              updateProductionStep("🎬 ANIMATE", "in_progress", "انتظار 10 ثانیه برای آمادگی کامل مرورگر...");
               console.log(`⏸️ [AutoPilot] Waiting 10 seconds for browser to prepare...`);
-              setTimeout(
-                () => {
-                  // CRITICAL FIX: Start recording FIRST, wait for it to be ready, then start animation
-                  console.log(`🎬 [AutoPilot] Starting recording first...`);
-                  setState((s) => ({ ...s, isRecording: true, pipelineStep: "RECORDING" }));
-                  updateProductionStep('🎥 RECORD', 'in_progress', 'در حال آماده‌سازی ضبط...');
+              setTimeout(() => {
+                // CRITICAL FIX: Start recording FIRST, wait for it to be ready, then start animation
+                console.log(`🎬 [AutoPilot] Starting recording first...`);
+                setState((s) => ({ ...s, isRecording: true, pipelineStep: "RECORDING" }));
+                updateProductionStep("🎥 RECORD", "in_progress", "در حال آماده‌سازی ضبط...");
 
-                  // Wait 500ms for MediaRecorder to initialize, then start animation
-                  setTimeout(() => {
-                    console.log(`🎬 [AutoPilot] Recording ready, now starting animation!`);
-                    setState((s) => ({ ...s, isSolving: true }));
-                    updateProductionStep('🎬 ANIMATE', 'completed', 'انیمیشن آغاز شد');
-                    updateProductionStep('🎥 RECORD', 'in_progress', 'در حال ضبط ویدئو...');
-                  }, 500);
-                },
-                10000
-              );
+                // Wait 500ms for MediaRecorder to initialize, then start animation
+                setTimeout(() => {
+                  console.log(`🎬 [AutoPilot] Recording ready, now starting animation!`);
+                  setState((s) => ({ ...s, isSolving: true }));
+                  updateProductionStep("🎬 ANIMATE", "completed", "انیمیشن آغاز شد");
+                  updateProductionStep("🎥 RECORD", "in_progress", "در حال ضبط ویدئو...");
+                }, 500);
+              }, 10000);
             } else {
               setState((s) => ({ ...s, pipelineStep: "IDLE" }));
             }
@@ -810,7 +886,7 @@ export const useProductionPipeline = (
             const maxAttempts = 5;
 
             // Step 3: VALIDATION - Uniqueness check with trending topics
-            updateProductionStep('🔍 VALIDATION', 'in_progress');
+            updateProductionStep("🔍 VALIDATION", "in_progress");
 
             // Validation loop with trending topics
             while (attempts < maxAttempts) {
@@ -820,9 +896,7 @@ export const useProductionPipeline = (
               const trendingTopics = await getTrendingTopics();
               const randomTopic = trendingTopics[Math.floor(Math.random() * trendingTopics.length)];
 
-              console.log(
-                `\n🎯 Attempt ${attempts}/${maxAttempts}: Generating breaking news content`
-              );
+              console.log(`\n🎯 Attempt ${attempts}/${maxAttempts}: Generating breaking news content`);
               console.log(`📰 Topic: ${randomTopic}`);
 
               // Generate content package
@@ -832,7 +906,7 @@ export const useProductionPipeline = (
               coreSubject = await extractCoreSubject(
                 contentPackage.visualPrompt,
                 contentPackage.storyArc,
-                "Breaking News"
+                "Breaking News",
               );
 
               // Check similarity via backend API
@@ -841,15 +915,20 @@ export const useProductionPipeline = (
 
               if (similarityResult.success && similarityResult.data) {
                 const isSimilar = similarityResult.data.isSimilar;
-                const score = similarityResult.data.similarityScore !== undefined
-                  ? similarityResult.data.similarityScore
-                  : 0;
+                const score =
+                  similarityResult.data.similarityScore !== undefined
+                    ? similarityResult.data.similarityScore
+                    : 0;
 
                 if (!isSimilar) {
                   console.log(`✅ Content approved as unique! Proceeding with generation.`);
                   console.log(`🔍 [VALIDATION] Similarity Score: ${score} (UNIQUE)`);
                   const scoreText = score.toFixed(2);
-                  updateProductionStep('🔍 VALIDATION', 'completed', `امتیاز: ${scoreText} - خبر منحصربه‌فرد`);
+                  updateProductionStep(
+                    "🔍 VALIDATION",
+                    "completed",
+                    `امتیاز: ${scoreText} - خبر منحصربه‌فرد`,
+                  );
                   setCurrentSimilarityScore(score);
                   break;
                 } else {
@@ -857,40 +936,54 @@ export const useProductionPipeline = (
                   if (attempts < maxAttempts) {
                     console.log(`   🔄 Regenerating with different topic...\n`);
                     const scoreText = score.toFixed(2);
-                    updateProductionStep('🔍 VALIDATION', 'in_progress', `امتیاز: ${scoreText} - تلاش ${attempts}/${maxAttempts}`);
+                    updateProductionStep(
+                      "🔍 VALIDATION",
+                      "in_progress",
+                      `امتیاز: ${scoreText} - تلاش ${attempts}/${maxAttempts}`,
+                    );
                   }
                 }
               } else {
                 console.warn(`⚠️ [API] Similarity check failed: ${similarityResult.error}`);
                 console.log(`   Proceeding with content generation (assuming unique)...`);
-                updateProductionStep('🔍 VALIDATION', 'completed', 'خطا در بررسی - ادامه با فرض منحصربه‌فرد بودن');
+                updateProductionStep(
+                  "🔍 VALIDATION",
+                  "completed",
+                  "خطا در بررسی - ادامه با فرض منحصربه‌فرد بودن",
+                );
                 break;
               }
             }
 
             if (attempts >= maxAttempts) {
               console.warn(`⚠️ Max attempts reached. Using last generated content despite similarity.`);
-              updateProductionStep('🔍 VALIDATION', 'completed', `حداکثر تلاش - استفاده از آخرین خبر`);
+              updateProductionStep("🔍 VALIDATION", "completed", `حداکثر تلاش - استفاده از آخرین خبر`);
             }
 
             // Store core subject and visual prompt
             setCurrentCoreSubject(coreSubject);
             setCurrentVisualPrompt(contentPackage.visualPrompt);
-            setCurrentSource('BREAKING');
+            setCurrentSource("BREAKING");
 
             sourceSubject = contentPackage.visualPrompt;
             activeTopicType = TopicType.BREAKING;
             categoryLabel = "Breaking News";
 
             // Step 3: VARIETY - Randomize Visual Parameters
-            updateProductionStep('🎭 VARIETY', 'in_progress');
+            updateProductionStep("🎭 VARIETY", "in_progress");
             const breakingVisual = randomizeVisualParameters();
-            console.log(`🎭 [VARIETY] Style: ${breakingVisual.randomStyle}, Movement: ${breakingVisual.randomMovement}`);
-            updateProductionStep('🎭 VARIETY', 'completed', `سبک: ${breakingVisual.randomStyle}, حرکت: ${breakingVisual.randomMovement}, ماده: ${breakingVisual.randomMaterial}, شکل: ${breakingVisual.randomShape}`);
+            console.log(
+              `🎭 [VARIETY] Style: ${breakingVisual.randomStyle}, Movement: ${breakingVisual.randomMovement}`,
+            );
+            updateProductionStep(
+              "🎭 VARIETY",
+              "completed",
+              `سبک: ${breakingVisual.randomStyle}, حرکت: ${breakingVisual.randomMovement}, ماده: ${breakingVisual.randomMaterial}, شکل: ${breakingVisual.randomShape}`,
+            );
 
             // Step 4: MUSIC - Smart Music Selection
             setState((s) => ({ ...s, pipelineStep: "MUSIC" }));
-            updateProductionStep('🎵 MUSIC', 'in_progress');
+            updateProductionStep("🎵 MUSIC", "in_progress");
             const breakingMusicResult = await selectSmartMusic({
               musicTracks,
               queueIndex: state.currentQueueIdx,
@@ -902,22 +995,36 @@ export const useProductionPipeline = (
               audioRef,
             });
             if (breakingMusicResult) {
-              console.log(`🎵 [MUSIC] Selected: ${breakingMusicResult.title} from ${breakingMusicResult.source}`);
-              const breakingMusicTitlePreview = breakingMusicResult.title.length > 40 ? breakingMusicResult.title.substring(0, 40) + '...' : breakingMusicResult.title;
-              updateProductionStep('🎵 MUSIC', 'completed', `منبع: ${breakingMusicResult.source}, قطعه: ${breakingMusicTitlePreview}`);
+              console.log(
+                `🎵 [MUSIC] Selected: ${breakingMusicResult.title} from ${breakingMusicResult.source}`,
+              );
+              const breakingMusicTitlePreview =
+                breakingMusicResult.title.length > 40
+                  ? breakingMusicResult.title.substring(0, 40) + "..."
+                  : breakingMusicResult.title;
+              updateProductionStep(
+                "🎵 MUSIC",
+                "completed",
+                `منبع: ${breakingMusicResult.source}, قطعه: ${breakingMusicTitlePreview}`,
+              );
               setCurrentMusicInfo(breakingMusicResult);
             } else {
-              updateProductionStep('🎵 MUSIC', 'completed', 'موسیقی انتخاب نشد - ادامه بدون موسیقی');
+              updateProductionStep("🎵 MUSIC", "completed", "موسیقی انتخاب نشد - ادامه بدون موسیقی");
               setCurrentMusicInfo(null);
             }
 
             // Step 5: GENERATE - Create Visual Content
             setState((s) => ({ ...s, pipelineStep: "SYNTH" }));
-            updateProductionStep('🎨 GENERATE', 'in_progress');
+            updateProductionStep("🎨 GENERATE", "in_progress");
             const art = await generateArtImage(breakingVisual.randomStyle, contentPackage.visualPrompt);
-            console.log(`🎨 [GENERATE] Image: ${art.imageUrl?.substring(0, 50)}..., Story: ${contentPackage.storyArc.hook}`);
-            const breakingHookPreview = contentPackage.storyArc.hook.length > 50 ? contentPackage.storyArc.hook.substring(0, 50) + '...' : contentPackage.storyArc.hook;
-            updateProductionStep('🎨 GENERATE', 'completed', `تصویر تولید شد - خبر: ${breakingHookPreview}`);
+            console.log(
+              `🎨 [GENERATE] Image: ${art.imageUrl?.substring(0, 50)}..., Story: ${contentPackage.storyArc.hook}`,
+            );
+            const breakingHookPreview =
+              contentPackage.storyArc.hook.length > 50
+                ? contentPackage.storyArc.hook.substring(0, 50) + "..."
+                : contentPackage.storyArc.hook;
+            updateProductionStep("🎨 GENERATE", "completed", `تصویر تولید شد - خبر: ${breakingHookPreview}`);
 
             setPreferences((p) => ({
               ...p,
@@ -943,42 +1050,40 @@ export const useProductionPipeline = (
             }));
 
             // Step 6: METADATA - Generate metadata
-            updateProductionStep('📋 METADATA', 'in_progress');
+            updateProductionStep("📋 METADATA", "in_progress");
             setIsMetadataLoading(true);
             setMetadata(contentPackage.metadata);
             setIsMetadataLoading(false);
             console.log(`📋 [METADATA] Title: ${contentPackage.metadata?.title}`);
-            const metadataTitle = contentPackage.metadata?.title || 'نامشخص';
-            const titlePreview = metadataTitle.length > 50 ? metadataTitle.substring(0, 50) + '...' : metadataTitle;
-            updateProductionStep('📋 METADATA', 'completed', `عنوان: ${titlePreview}`);
+            const metadataTitle = contentPackage.metadata?.title || "نامشخص";
+            const titlePreview =
+              metadataTitle.length > 50 ? metadataTitle.substring(0, 50) + "..." : metadataTitle;
+            updateProductionStep("📋 METADATA", "completed", `عنوان: ${titlePreview}`);
 
             // Step 7: THUMBNAIL - Prepare thumbnail
             setState((s) => ({ ...s, pipelineStep: "THUMBNAIL" }));
-            updateProductionStep('🖼️ THUMBNAIL', 'in_progress');
+            updateProductionStep("🖼️ THUMBNAIL", "in_progress");
             console.log(`🖼️ [THUMBNAIL] Preparing thumbnail generation...`);
-            updateProductionStep('🖼️ THUMBNAIL', 'completed', 'آماده برای تولید تامبنیل');
+            updateProductionStep("🖼️ THUMBNAIL", "completed", "آماده برای تولید تامبنیل");
 
             if (state.isAutoMode) {
               // Step 8: ANIMATE - Start animation (with recording synchronization)
-              updateProductionStep('🎬 ANIMATE', 'in_progress', 'انتظار 10 ثانیه برای آمادگی کامل مرورگر...');
+              updateProductionStep("🎬 ANIMATE", "in_progress", "انتظار 10 ثانیه برای آمادگی کامل مرورگر...");
               console.log(`⏸️ [AutoPilot] Waiting 10 seconds for browser to prepare...`);
-              setTimeout(
-                () => {
-                  // CRITICAL FIX: Start recording FIRST, wait for it to be ready, then start animation
-                  console.log(`🎬 [AutoPilot] Starting recording first...`);
-                  setState((s) => ({ ...s, isRecording: true, pipelineStep: "RECORDING" }));
-                  updateProductionStep('🎥 RECORD', 'in_progress', 'در حال آماده‌سازی ضبط...');
+              setTimeout(() => {
+                // CRITICAL FIX: Start recording FIRST, wait for it to be ready, then start animation
+                console.log(`🎬 [AutoPilot] Starting recording first...`);
+                setState((s) => ({ ...s, isRecording: true, pipelineStep: "RECORDING" }));
+                updateProductionStep("🎥 RECORD", "in_progress", "در حال آماده‌سازی ضبط...");
 
-                  // Wait 500ms for MediaRecorder to initialize, then start animation
-                  setTimeout(() => {
-                    console.log(`🎬 [AutoPilot] Recording ready, now starting animation!`);
-                    setState((s) => ({ ...s, isSolving: true }));
-                    updateProductionStep('🎬 ANIMATE', 'completed', 'انیمیشن آغاز شد');
-                    updateProductionStep('🎥 RECORD', 'in_progress', 'در حال ضبط ویدئو...');
-                  }, 500);
-                },
-                10000
-              );
+                // Wait 500ms for MediaRecorder to initialize, then start animation
+                setTimeout(() => {
+                  console.log(`🎬 [AutoPilot] Recording ready, now starting animation!`);
+                  setState((s) => ({ ...s, isSolving: true }));
+                  updateProductionStep("🎬 ANIMATE", "completed", "انیمیشن آغاز شد");
+                  updateProductionStep("🎥 RECORD", "in_progress", "در حال ضبط ویدئو...");
+                }, 500);
+              }, 10000);
             } else {
               setState((s) => ({ ...s, pipelineStep: "IDLE" }));
             }
@@ -994,13 +1099,13 @@ export const useProductionPipeline = (
           const coreSubject = await extractCoreSubject(
             contentPackage.visualPrompt,
             contentPackage.storyArc,
-            randomNiche.label
+            randomNiche.label,
           );
 
           // Store for later database save
           setCurrentCoreSubject(coreSubject);
           setCurrentVisualPrompt(contentPackage.visualPrompt);
-          setCurrentSource('MANUAL');
+          setCurrentSource("MANUAL");
           setCurrentSimilarityScore(undefined);
 
           setState((s) => ({ ...s, pipelineStep: "MUSIC" }));
@@ -1054,7 +1159,7 @@ export const useProductionPipeline = (
         }));
       }
     },
-    [preferences, state.isAutoMode, onAddCloudTrack, setActiveTrackName, setPreferences, fetchAudioBlob]
+    [preferences, state.isAutoMode, onAddCloudTrack, setActiveTrackName, setPreferences, fetchAudioBlob],
   );
 
   const toggleAutoMode = useCallback(() => {
@@ -1068,12 +1173,12 @@ export const useProductionPipeline = (
         queue: active
           ? [
               // Queue mطابق AUTO_PILOT_STRATEGY.md v6.0
-              { duration: 0.5, source: "VIRAL", pieceCount: 100 },    // 30s - Hook & Fast Reveal
-              { duration: 0.75, source: "VIRAL", pieceCount: 300 },   // 45s - Retention Test
-              { duration: 1.0, source: "VIRAL", pieceCount: 500 },    // 60s - Full Engagement
-              { duration: 1.5, source: "VIRAL", pieceCount: 2000 },   // 90s - Deep Dive
-              { duration: 1.0, source: "BREAKING", pieceCount: 500 }, // 60s - Trending & Timely
-              { duration: 1.0, source: "NARRATIVE", pieceCount: 900 },// 60s - High Detail Finale
+              { duration: 0.5, source: "VIRAL", pieceCount: 100 }, // 30s - Hook & Fast Reveal
+              { duration: 0.75, source: "VIRAL", pieceCount: 300 }, // 45s - Retention Test
+              { duration: 1.0, source: "VIRAL", pieceCount: 500 }, // 60s - Full Engagement
+              { duration: 1.5, source: "VIRAL", pieceCount: 2000 }, // 90s - Deep Dive
+              { duration: 1.0, source: "BREAKING", pieceCount: 700 }, // 60s - Trending & Timely
+              { duration: 1.0, source: "NARRATIVE", pieceCount: 900 }, // 60s - High Detail Finale
             ]
           : s.queue,
         currentQueueIdx: active ? 0 : s.currentQueueIdx,

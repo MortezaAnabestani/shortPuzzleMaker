@@ -22,11 +22,17 @@ export interface RenderOptions {
   channelLogo?: HTMLImageElement;
 }
 
-// ککش کردن نتایج wrapText برای جلوگیری از محاسبات سنگین در هر فریم
-const textCache: Record<string, string[]> = {};
+// --- اصلاح ۱: مدیریت کش متن برای جلوگیری از نشت حافظه ---
+let textCache: Record<string, string[]> = {};
+
+// متدی برای پاکسازی کش که باید در پایان هر ویدئو صدا زده شود
+export const resetRendererCache = () => {
+  textCache = {};
+  // اگر envEngine یا سایر بخش‌ها کش دارند، اینجا ریست کنید
+};
 
 const wrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number) => {
-  const cacheKey = `${text}_${maxWidth}`;
+  const cacheKey = `${text}_${maxWidth}_${ctx.font}`; // اضافه کردن فونت به کلید برای دقت بیشتر
   if (textCache[cacheKey]) return textCache[cacheKey];
 
   const words = text.split(" ");
@@ -43,6 +49,12 @@ const wrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
     }
   }
   lines.push(currentLine);
+
+  // جلوگیری از رشد بی‌رویه کش در یک سشن طولانی
+  if (Object.keys(textCache).length > 500) {
+    textCache = {};
+  }
+
   textCache[cacheKey] = lines;
   return lines;
 };
@@ -119,12 +131,14 @@ export const renderPuzzleFrame = ({
   const vWidth = 1080;
   const vHeight = 2280;
   const totalPieces = pieces.length;
+
+  // محافظت در برابر قطعات خالی (که باعث تقسیم بر صفر یا رندر اشتباه می‌شود)
   if (totalPieces === 0) return 0;
 
   const elapsedAfterFinish = Math.max(0, elapsed - totalDuration);
   const fState = getFinaleState(elapsedAfterFinish);
 
-  // --- 1. ENVIRONMENT (لایه پس‌زمینه) ---
+  // --- 1. ENVIRONMENT ---
   envEngine.render(ctx, img, elapsed, vWidth, vHeight);
 
   ctx.save();
@@ -134,25 +148,24 @@ export const renderPuzzleFrame = ({
     ctx.translate(-vWidth / 2, -vHeight / 2);
   }
 
-  // Ghost preview (تصویر کمرنگ راهنما)
+  // Ghost preview
   ctx.globalAlpha = 0.015;
   ctx.drawImage(img, 0, 0, vWidth, vHeight);
   ctx.globalAlpha = 1.0;
 
   let completedCount = 0;
 
-  // --- 2. SINGLE LOOP DRAWING (پردازش هوشمند قطعات) ---
-  // توجه: دیگر از pieces.sort استفاده نمی‌کنیم چون در usePuzzleLogic قبلاً مرتب شده است.
+  // --- 2. SINGLE LOOP DRAWING ---
   for (let i = 0; i < totalPieces; i++) {
     const p = pieces[i];
-    const delay = (p.assemblyOrder / totalPieces) * (totalDuration - 2700);
+    // محافظت در برابر مدت زمان صفر یا نامعتبر
+    const safeDuration = totalDuration > 2700 ? totalDuration : 30000;
+    const delay = (p.assemblyOrder / totalPieces) * (safeDuration - 2700);
     const tRaw = Math.max(0, Math.min((elapsed - delay) / 2700, 1));
 
-    // انتخاب هوشمند منبع تصویر (Bitmap اولویت دارد)
     const visual = p.cachedBitmap || p.cachedCanvas;
     if (!visual) continue;
 
-    // وضعیت فیزیک (انفجار پایان ویدیو)
     const physicsData = physicsPieces?.get(p.id);
     if (physicsData) {
       ctx.save();
@@ -164,21 +177,15 @@ export const renderPuzzleFrame = ({
     }
 
     if (tRaw >= 1) {
-      // الف) قطعاتی که در جای خود فیکس شده‌اند
       completedCount++;
       clearTrailForPiece(p.id);
       const waveY = getDiagonalWaveY(p, elapsedAfterFinish, vWidth, vHeight);
-
-      // محاسبه دقیق موقعیت برای انطباق کامل با پدینگ
       const drawX = p.tx - (visual.width - p.pw) / 2;
       const drawY = p.ty - (visual.height - p.ph) / 2 + waveY;
-
       ctx.drawImage(visual, drawX, drawY);
     } else if (tRaw > 0) {
-      // ب) قطعاتی که در حال پرواز به سمت هدف هستند
       const pos = calculateKineticTransform(p, tRaw, movement, vWidth, vHeight);
 
-      // افکت دنباله (Trail) - فقط در اوج حرکت
       if (tRaw >= 0.1 && tRaw <= 0.85) {
         updateTrailHistory(p, pos.x, pos.y, pos.rot, pos.scale, elapsed, movement, tRaw);
         renderTrailEffect(ctx, p, movement);
@@ -188,19 +195,15 @@ export const renderPuzzleFrame = ({
       ctx.translate(pos.x, pos.y);
       ctx.rotate(pos.rot);
       ctx.scale(pos.scale, pos.scale);
-
-      // بهینه‌سازی سایه: استفاده از مستطیل ساده به جای shadowBlur سنگین
       ctx.fillStyle = "rgba(0,0,0,0.35)";
       ctx.fillRect(-p.pw / 2 + 8, -p.ph / 2 + 8, p.pw, p.ph);
-
-      // رسم قطعه
       ctx.drawImage(visual, -visual.width / 2, -visual.height / 2);
       ctx.restore();
     }
   }
   ctx.restore();
 
-  // --- 3. STORY ARC & UI (بخش روایی و متن‌ها) ---
+  // --- 3. STORY ARC & UI ---
   if (!physicsPieces) {
     const progressPercent = (Math.min(elapsed, totalDuration) / totalDuration) * 100;
     let text = "";
@@ -208,7 +211,6 @@ export const renderPuzzleFrame = ({
     let labelColor = "rgba(70, 140, 255, 1)";
     let borderColor = "rgba(70, 140, 255, 0.4)";
 
-    // مدیریت سناریوی داستانی
     if (storyArc) {
       if (progressPercent >= 5 && progressPercent < 15) {
         text = storyArc.hook;
@@ -252,7 +254,6 @@ export const renderPuzzleFrame = ({
       const floatY = Math.sin(elapsed / 600) * 8;
       ctx.translate(0, floatY);
 
-      // افکت شیشه‌ای باکس متن
       const grad = ctx.createLinearGradient(0, boxY, 0, boxY + boxH);
       grad.addColorStop(0, "rgba(15, 20, 45, 0.95)");
       grad.addColorStop(1, "rgba(5, 5, 20, 0.98)");
@@ -263,7 +264,6 @@ export const renderPuzzleFrame = ({
       ctx.lineWidth = 4;
       ctx.stroke();
 
-      // رسم برچسب و محتوا
       ctx.fillStyle = labelColor;
       ctx.font = "black 24px Inter, sans-serif";
       ctx.fillText(label, boxX + 70, boxY + 75);
@@ -277,7 +277,6 @@ export const renderPuzzleFrame = ({
     }
   }
 
-  // --- 4. OUTRO (کارت پایانی) ---
   if (physicsPieces) {
     renderOutroCard({ ctx, vWidth, vHeight, elapsedAfterFinish, channelLogo });
   }

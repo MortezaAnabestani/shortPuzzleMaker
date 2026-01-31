@@ -30,6 +30,8 @@ export interface Piece {
   gridX: number;
   gridY: number;
   sectorIndex: number;
+  // استفاده از ImageBitmap برای پرفورمنس فوق‌العاده
+  cachedBitmap?: ImageBitmap;
   cachedCanvas?: HTMLCanvasElement;
   hasSnapped?: boolean;
 }
@@ -42,17 +44,17 @@ export const usePuzzleLogic = () => {
     ctx: CanvasRenderingContext2D,
     pw: number,
     ph: number,
-    material: PieceMaterial
+    material: PieceMaterial,
   ) => {
     ctx.save();
+    ctx.globalCompositeOperation = "overlay";
 
     switch (material) {
       case PieceMaterial.CARDBOARD:
-        ctx.globalCompositeOperation = "overlay";
         ctx.globalAlpha = 0.08;
-        for (let i = 0; i < (pw * ph) / 8; i++) {
-          ctx.fillStyle = Math.random() > 0.5 ? "#ffffff" : "#000000";
-          ctx.fillRect((Math.random() - 0.5) * pw, (Math.random() - 0.5) * ph, 1, 1);
+        for (let i = 0; i < 30; i++) {
+          ctx.fillStyle = i % 2 === 0 ? "#ffffff" : "#000000";
+          ctx.fillRect(Math.random() * pw - pw / 2, Math.random() * ph - ph / 2, 2, 2);
         }
         break;
 
@@ -78,16 +80,11 @@ export const usePuzzleLogic = () => {
         break;
 
       case PieceMaterial.CARBON:
-        ctx.globalCompositeOperation = "soft-light";
-        ctx.globalAlpha = 0.25;
+        ctx.globalAlpha = 0.2;
         ctx.fillStyle = "#000000";
-        const step = 3;
-        for (let i = -pw / 2; i < pw / 2; i += step) {
-          for (let j = -ph / 2; j < ph / 2; j += step) {
-            if ((Math.floor(i / step) + Math.floor(j / step)) % 2 === 0) {
-              ctx.fillRect(i, j, step, step);
-            }
-          }
+        const step = 4;
+        for (let i = -pw / 2; i < pw / 2; i += step * 2) {
+          ctx.fillRect(i, -ph / 2, step, ph);
         }
         break;
     }
@@ -101,20 +98,15 @@ export const usePuzzleLogic = () => {
       shape: PieceShape,
       isShorts: boolean,
       material: PieceMaterial,
-      onProgress?: (p: number) => void
+      onProgress?: (p: number) => void,
     ) => {
       if (!img || img.naturalWidth === 0) return [];
-
       imageRef.current = img;
-      // Updated virtual dimensions for 19:9 Vertical (approx 9:19 ratio)
+
       const virtualW = 1080;
       const virtualH = 2280;
-
       const imgW = img.naturalWidth;
       const imgH = img.naturalHeight;
-
-      // Calculate scaling to fill 1080x2280 with a 9:16 image (Object-Fit: Cover)
-      // 9:16 is 1080x1920. 2280/1920 = 1.1875
       const scale = Math.max(virtualW / imgW, virtualH / imgH);
 
       const effectiveShape = shape;
@@ -178,6 +170,15 @@ export const usePuzzleLogic = () => {
       let idCounter = 0;
       const totalExpected = rows * cols * (effectiveShape === PieceShape.TRIANGLE ? 2 : 1);
 
+      // بهینه‌سازی: استفاده از یک کانواس موقت برای ساخت تمام قطعات (Reuse)
+      const padding = Math.max(pw, ph) * 0.4;
+      const canvasSizeW = Math.ceil(pw + padding * 2);
+      const canvasSizeH = Math.ceil(ph + padding * 2);
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = canvasSizeW;
+      tempCanvas.height = canvasSizeH;
+      const tempCtx = tempCanvas.getContext("2d", { alpha: true })!;
+
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
           const variations = effectiveShape === PieceShape.TRIANGLE ? 2 : 1;
@@ -216,16 +217,10 @@ export const usePuzzleLogic = () => {
             const sectorY = Math.floor(targetY / (virtualH / 3));
             const sectorIndex = Math.min(11, Math.max(0, sectorY * 4 + sectorX));
 
-            // Smart Sampling to Cover 9:19 canvas from 9:16 source
-            const padding = Math.max(pw, ph) * 0.6;
             const sampleX = (drawX - padding) / scale + imgW / 2 - virtualW / (2 * scale);
             const sampleY = (drawY - padding) / scale + imgH / 2 - virtualH / (2 * scale);
             const sampleW = (pw + padding * 2) / scale;
             const sampleH = (ph + padding * 2) / scale;
-
-            const scatterX = virtualW * 0.1 + Math.random() * virtualW * 0.8;
-            const scatterY = virtualH * 0.85 + (Math.random() - 0.5) * (virtualH * 0.1);
-            const randomRotation = (Math.random() - 0.5) * Math.PI * 0.5;
 
             const piece: Piece = {
               id: idCounter++,
@@ -235,11 +230,11 @@ export const usePuzzleLogic = () => {
               sh: sampleH,
               tx: drawX,
               ty: drawY,
-              cx: scatterX,
-              cy: scatterY,
-              pw: pw,
-              ph: ph,
-              rotation: randomRotation,
+              cx: virtualW * 0.1 + Math.random() * virtualW * 0.8,
+              cy: virtualH * 0.85 + (Math.random() - 0.5) * (virtualH * 0.1),
+              pw,
+              ph,
+              rotation: (Math.random() - 0.5) * Math.PI * 0.4,
               zOrder: Math.random(),
               assemblyOrder: 0,
               subIndex: v,
@@ -247,22 +242,16 @@ export const usePuzzleLogic = () => {
               gridY: y,
               sectorIndex,
               connections: needsConnections ? connGrid[y][x] : undefined,
-              hasSnapped: false,
             };
 
-            const offCanvas = document.createElement("canvas");
-            const canvasSizeW = Math.ceil(pw + padding * 2);
-            const canvasSizeH = Math.ceil(ph + padding * 2);
-            offCanvas.width = canvasSizeW;
-            offCanvas.height = canvasSizeH;
-            const offCtx = offCanvas.getContext("2d", { alpha: true })!;
+            // رسم قطعه در کانواس موقت
+            tempCtx.clearRect(0, 0, canvasSizeW, canvasSizeH);
+            tempCtx.save();
+            tempCtx.translate(canvasSizeW / 2, canvasSizeH / 2);
+            drawPiecePath(tempCtx, pw, ph, effectiveShape, v, piece.connections);
+            tempCtx.clip();
 
-            offCtx.translate(canvasSizeW / 2, canvasSizeH / 2);
-            offCtx.save();
-            drawPiecePath(offCtx, pw, ph, effectiveShape, v, piece.connections);
-            offCtx.clip();
-            // Draw with smart samples
-            offCtx.drawImage(
+            tempCtx.drawImage(
               img,
               piece.sx,
               piece.sy,
@@ -271,22 +260,34 @@ export const usePuzzleLogic = () => {
               -pw / 2 - padding,
               -ph / 2 - padding,
               pw + padding * 2,
-              ph + padding * 2
+              ph + padding * 2,
             );
-            applyMaterialTexture(offCtx, pw, ph, material);
-            offCtx.restore();
+            applyMaterialTexture(tempCtx, pw, ph, material);
 
-            offCtx.save();
-            drawPiecePath(offCtx, pw, ph, effectiveShape, v, piece.connections);
-            offCtx.strokeStyle = "rgba(0,0,0,0.2)";
-            offCtx.lineWidth = 0.8;
-            offCtx.stroke();
-            offCtx.restore();
+            // استروک ظریف برای لبه‌ها
+            tempCtx.strokeStyle = "rgba(0,0,0,0.15)";
+            tempCtx.lineWidth = 1;
+            tempCtx.stroke();
+            tempCtx.restore();
 
-            piece.cachedCanvas = offCanvas;
+            // تبدیل به ImageBitmap (انتقال سریع به GPU و آزادسازی RAM)
+            try {
+              if (window.createImageBitmap) {
+                piece.cachedBitmap = await createImageBitmap(tempCanvas);
+              } else {
+                const offCanvas = document.createElement("canvas");
+                offCanvas.width = canvasSizeW;
+                offCanvas.height = canvasSizeH;
+                offCanvas.getContext("2d")?.drawImage(tempCanvas, 0, 0);
+                piece.cachedCanvas = offCanvas;
+              }
+            } catch (e) {
+              console.error("Critical: Bitmap generation failed", e);
+            }
+
             newPieces.push(piece);
 
-            if (onProgress && idCounter % 50 === 0) {
+            if (onProgress && idCounter % 100 === 0) {
               onProgress(idCounter / totalExpected);
               await new Promise((resolve) => setTimeout(resolve, 0));
             }
@@ -294,15 +295,19 @@ export const usePuzzleLogic = () => {
         }
       }
 
+      // بهینه‌سازی نهایی: مرتب‌سازی قطعات همینجا بر اساس zOrder
+      // تا در فایل Renderer نیاز به سورت در هر فریم نباشد
+      newPieces.sort((a, b) => a.zOrder - b.zOrder);
+
       const orderArray = Array.from({ length: newPieces.length }, (_, i) => i).sort(
-        () => Math.random() - 0.5
+        () => Math.random() - 0.5,
       );
       newPieces.forEach((p, i) => (p.assemblyOrder = orderArray[i]));
 
       piecesRef.current = newPieces;
       return newPieces;
     },
-    []
+    [],
   );
 
   return { piecesRef, imageRef, createPieces };

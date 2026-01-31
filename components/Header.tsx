@@ -11,8 +11,20 @@ interface HeaderProps {
   hasImage: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ progress, isColoring, isRecording, error, hasImage }) => {
+const Header: React.FC<Omit<HeaderProps, "progress">> = ({ isColoring, isRecording, error, hasImage }) => {
   const { mode, isConnected, setMode, checkConnection } = useBackendMode();
+
+  // تعریف یک State محلی فقط برای نمایش عدد درصد
+  const [localProgress, setLocalProgress] = React.useState(0);
+
+  React.useEffect(() => {
+    // گوش دادن به رویداد تغییر پیشرفت پازل
+    const handleUpdate = (e: any) => {
+      setLocalProgress(e.detail);
+    };
+    window.addEventListener("puzzle-progress-update", handleUpdate);
+    return () => window.removeEventListener("puzzle-progress-update", handleUpdate);
+  }, []);
 
   return (
     <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-50">
@@ -94,13 +106,13 @@ const Header: React.FC<HeaderProps> = ({ progress, isColoring, isRecording, erro
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-slate-400 font-mono uppercase">Processing</span>
                 <span className="text-[11px] font-mono font-bold text-slate-700">
-                  {Math.floor(progress)}%
+                  {Math.floor(localProgress)}% {/* استفاده از استیت محلی */}
                 </span>
               </div>
               <div className="w-32 h-1.5 bg-slate-100 rounded-sm overflow-hidden border border-slate-200">
                 <div
                   className="h-full bg-[#007acc] transition-all duration-300 ease-out"
-                  style={{ width: `${progress}%` }}
+                  style={{ width: `${localProgress}%` }} // استفاده از استیت محلی
                 />
               </div>
             </div>

@@ -51,7 +51,7 @@ const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(
       storyArc = null,
       showDocumentaryTips = false,
     },
-    ref
+    ref,
   ) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isReady, setIsReady] = useState(false);
@@ -150,7 +150,7 @@ const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(
       img.crossOrigin = "anonymous";
       img.onload = async () => {
         await createPieces(img, pieceCount, shape, true, material, (p) =>
-          setBuildProgress(Math.floor(p * 100))
+          setBuildProgress(Math.floor(p * 100)),
         );
         setIsReady(true);
         initPhysics();
@@ -231,6 +231,7 @@ const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(
           });
 
           const progressPercent = (Math.min(elapsedSinceStart, totalDuration) / totalDuration) * 100;
+          window.dispatchEvent(new CustomEvent("puzzle-progress-update", { detail: progressPercent }));
           onProgress(progressPercent);
           animationRef.current = requestAnimationFrame(loop);
         }
@@ -250,7 +251,7 @@ const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(
         getMatter,
         docSnippets,
         showDocumentaryTips,
-      ]
+      ],
     );
 
     useEffect(() => {
@@ -282,7 +283,7 @@ const PuzzleCanvas = forwardRef<CanvasHandle, PuzzleCanvasProps>(
         />
       </div>
     );
-  }
+  },
 );
 
 PuzzleCanvas.displayName = "PuzzleCanvas";

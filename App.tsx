@@ -217,14 +217,27 @@ const AppContent: React.FC = () => {
     setState((prev) => ({ ...prev, isFullPackage: !prev.isFullPackage }));
   }, [setState]);
 
-  const handlePuzzleFinished = async () => {
+  const getCanvas = useCallback(() => {
+    return canvasHandleRef.current?.getCanvas() || null;
+  }, []);
+
+  const handlePuzzleFinished = useCallback(async () => {
     if (audioRef.current) {
-      // Fade out over 1.5 seconds when puzzle completes
       await pauseWithFade(audioRef.current, { duration: 1500 });
       audioRef.current.currentTime = 0;
     }
-    setState((s) => ({ ...s, isSolving: false, isRecording: false, pipelineStep: "PACKAGING" }));
-  };
+    setState((s) => ({
+      ...s,
+      isSolving: false,
+      isRecording: false,
+      pipelineStep: "PACKAGING",
+      progress: 100, // فقط در انتها مقدار را ست می‌کنیم
+    }));
+  }, [setState]);
+
+  const handleProgressNoOp = useCallback(() => {
+    // این تابع را خالی می‌گذاریم تا App دوباره رندر نشود
+  }, []);
 
   return (
     <div className="flex h-screen bg-[#020205] text-slate-100 overflow-hidden font-['Inter'] relative">
@@ -276,7 +289,7 @@ const AppContent: React.FC = () => {
 
       <RecordingSystem
         isRecording={videoMode === "short" ? state.isRecording : longFormatPipeline.isRecording}
-        getCanvas={() => canvasHandleRef.current?.getCanvas() || null}
+        getCanvas={getCanvas}
         audioRef={audioRef}
         metadata={videoMode === "short" ? metadata : longFormatPipeline.metadata}
         durationMinutes={
@@ -378,7 +391,6 @@ const AppContent: React.FC = () => {
 
       <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#020205] relative z-10 flex flex-col">
         <Header
-          progress={videoMode === "short" ? state.progress : longFormatPipeline.progress.overallProgress}
           isColoring={videoMode === "short" ? state.isSolving : longFormatPipeline.isSolving}
           isRecording={videoMode === "short" ? state.isRecording : longFormatPipeline.isRecording}
           error={state.error}
@@ -407,7 +419,7 @@ const AppContent: React.FC = () => {
             topicCategory={preferences.topicCategory}
             engagementGifUrl={engagementGifUrl}
             channelLogoUrl={channelLogoUrl}
-            onProgress={(p) => setState((prev) => ({ ...prev, progress: p }))}
+            onProgress={handleProgressNoOp}
             onFinished={handlePuzzleFinished}
             onToggleSolve={handleToggleSolve}
             docSnippets={state.docSnippets}
